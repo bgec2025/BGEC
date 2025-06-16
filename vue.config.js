@@ -15,7 +15,7 @@ module.exports = {
       chunks: ['chunk-vendors', 'chunk-common', 'login']
     },
     event: {
-      entry: 'src/pages/event/main.js',
+      entry: 'src/pages/eventpage/main.js',
       template: 'public/event.html',
       filename: 'event.html',
       title: 'Event Page',
