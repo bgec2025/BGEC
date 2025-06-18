@@ -1,3 +1,5 @@
+
+
 import { createApp } from 'vue';
 import Login from './Login.vue';
 import { initializeApp } from "firebase/app";
@@ -7,12 +9,12 @@ import router from './Router/router'
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCTVuCtWbZs_Sxn6RvmmJ2qVdaUQksvNBU",
-  authDomain: "wreckhavoc-4c9b4.firebaseapp.com",
-  projectId: "wreckhavoc-4c9b4",
-  storageBucket: "wreckhavoc-4c9b4.firebasestorage.app",
-  messagingSenderId: "365102349927",
-  appId: "1:365102349927:web:386f38cd9e7bab83d99ec2"
+  apiKey: process.env.VUE_APP_API_KEY,
+  authDomain: process.env.VUE_APP_AUTH_DOMAIN,
+  projectId: process.env.VUE_APP_PROJECT_ID,
+  storageBucket: process.env.VUE_APP_STORAGEBUCKET,
+  messagingSenderId: process.env.VUE_APP_MESSAGING_SENDER_ID,
+  appId: process.env.VUE_APP_APP_ID
 };
 
 // Initialize Firebase
