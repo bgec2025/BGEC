@@ -1,4 +1,11 @@
+const Dotenv = require('dotenv-webpack');
+
 module.exports = {
+  configureWebpack: {
+    plugins: [
+      new Dotenv()
+    ]
+  },
   pages: {
     index: {
       entry: 'src/pages/home/main.js',
