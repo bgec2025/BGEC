@@ -7,18 +7,36 @@
             <input type="submit" value="Login">
             <p>Have an account? <router-link to="/Login">Login Here</router-link></p>
         </form>
+        <div id="additionalSignInOptions">
+            <div id="googleSignIn">
+                <button @click.prevent="googleSignIn">Sign In With Google</button>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
 import {ref} from 'vue';
-import {getApp} from 'firebase/app'
-import {getAuth, createUserWithEmailAndPassword} from 'firebase/auth'
+import {getApp} from 'firebase/app';
+import {getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider} from 'firebase/auth';
+// import {useRouter} from 'vue-router';
+
 export default{
     setup(){
         const email = ref("");
         const password = ref("");
         const auth  = getAuth(getApp())
+        const provider = new GoogleAuthProvider();
+        
+        const googleSignIn = ()=>
+        {
+            signInWithPopup(auth, provider)
+        .then((result)=>{
+            console.log("user signed in:", result.user);
+        })
+        // eslint-disable-next-line
+        .catch((err)=>alert(err.message))
+    }
 
         const RegisterFunction = ()=>{
             createUserWithEmailAndPassword(auth, email.value, password.value)
@@ -31,6 +49,7 @@ export default{
         }
         return {
             RegisterFunction,
+            googleSignIn,
             email,
             password
         }

@@ -21,3 +21,5 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 console.log(app)
 createApp(Login).use(router).mount('#loginpage')
+
+console.log(process.env)
