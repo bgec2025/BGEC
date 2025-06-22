@@ -32,9 +32,11 @@ export default {
                 photoURL: user.photoURL,
             }, {merge:true});
             if (route.path == '/Login' || route.path == '/Register')
-        {
-            router.replace('/');
-        }
+            {
+              router.replace('/');
+            }
+            // eslint-disable-next-line
+            window.location.href = '/homepage.html';
         }
         
         

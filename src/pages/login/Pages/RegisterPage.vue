@@ -1,6 +1,6 @@
 <template>
     <div class="Register">
-        <h1>Register</h1>
+        <!-- <h1>Register</h1>
         <form action="" @submit.prevent="RegisterFunction">
             <input type="text" placeholder="Email" v-model="email">
             <input type="password" placeholder="Enter Password" v-model="password">
@@ -11,7 +11,7 @@
             <div id="googleSignIn">
                 <button @click.prevent="googleSignIn">Sign In With Google</button>
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
 
@@ -19,8 +19,7 @@
 import {ref} from 'vue';
 import {getApp} from 'firebase/app';
 import {getAuth, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider} from 'firebase/auth';
-// import {useRouter} from 'vue-router';
-
+// import firebaseApp from '../../../firebase'
 export default{
     setup(){
         const email = ref("");

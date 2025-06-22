@@ -1,17 +1,17 @@
 <template>
   <div class="login">
     <h1>Login</h1>
-    <form @submit.prevent="LoginFunction">
+    <!-- <form @submit.prevent="LoginFunction">
       <input type="text" placeholder="Email" v-model="email">
       <input type="password" placeholder="Enter Password" v-model="password">
       <input type="submit" value="Login">
-    </form>
+    </form> -->
     <div id="additionalLogInOptions">
         <div id="googleLogIn">
             <button type="button" @click="googleSignIn">Sign in with Google</button>
         </div>
     </div>
-    <p>Need an account? <router-link to="/Register">Register Here</router-link></p>
+    <!-- <p>Need an account? <router-link to="/Register">Register Here</router-link></p> -->
   </div>
 </template>
 
@@ -19,6 +19,7 @@
 import { ref } from 'vue';
 import { getApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+// import firebaseApp from '../../../firebase'
 
 export default {
   setup() {
