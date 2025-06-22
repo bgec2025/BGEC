@@ -16,7 +16,7 @@
 import { onBeforeMount } from 'vue';
 // eslint-disable-next-line
 import { useRouter } from 'vue-router';
-import fetchUser from './getUserData';
+import fetchUser from '../../getUserData';
 import {ref} from 'vue';
 import firebaseApp from '../../firebase'
 import { onAuthStateChanged } from "firebase/auth"; 
