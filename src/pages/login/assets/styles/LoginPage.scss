@@ -375,10 +375,6 @@
     gap: 15px;
     margin-bottom: 25px;
     
-    .gaming-svg {
-      width: 30px;
-      height: 30px;
-    }
   }
 }
 
@@ -399,11 +395,6 @@
 // Reduced motion support
 @media (prefers-reduced-motion: reduce) {
   .marquee-content {
-    animation: none;
-  }
-  
-  .gaming-svg,
-  .logo-image {
     animation: none;
   }
   
