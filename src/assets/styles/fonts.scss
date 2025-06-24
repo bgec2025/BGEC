@@ -1,0 +1,211 @@
+
+
+// Astroz - Main headings
+@font-face {
+  font-family: 'Astroz';
+  src: url('/public/assets/fonts/astroz.woff2') format('woff2'),
+       url('/public/assets/fonts/Astroz\ Trial.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+// Joystix - Navigation and technical text
+@font-face {
+  font-family: 'Joystix';
+  src: url('/public/assets/fonts/orange-kid.woff2') format('woff2'),
+       url('/public/assets/fonts/joystix\ monospace.otf') format('opentype'),;
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+// Orange Kid - Body text and descriptions
+@font-face {
+  font-family: 'Orange Kid';
+  src: url('/public/assets/fonts/orange-kid.woff2') format('woff2'),   
+       url('/public/assets/fonts/Orange\ Kid.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+// Pinmold - Sub-headings
+@font-face {
+  font-family: 'Pinmold';
+  src: url('/public/assets/fonts/pinmold.woff2') format('woff2'),    
+       url('/public/assets/fonts/Pinmolddemo-jEaxv.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+// ===== FONT UTILITY CLASSES =====
+
+// Main heading font
+.font-astroz {
+  font-family: 'Astroz', 'Impact', 'Arial Black', sans-serif;
+  font-weight: normal;
+}
+
+// Navigation font
+.font-joystix {
+  font-family: 'Joystix', 'Courier New', monospace;
+  font-weight: normal;
+}
+
+// Body text font
+.font-orange-kid {
+  font-family: 'Orange Kid', 'Comic Sans MS', 'Trebuchet MS', sans-serif;
+  font-weight: normal;
+}
+
+// Sub-heading font
+.font-pinmold {
+  font-family: 'Pinmold', 'Verdana', 'Geneva', sans-serif;
+  font-weight: normal;
+}
+
+// ===== GLOBAL FONT APPLICATIONS =====
+
+// Apply default font to body
+body {
+  font-family: 'Orange Kid', 'Comic Sans MS', 'Trebuchet MS', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Main headings (h1)
+h1, .main-heading {
+  font-family: 'Astroz', 'Impact', 'Arial Black', sans-serif;
+  font-weight: normal;
+  line-height: 1.2;
+}
+
+// Navigation elements
+nav, .navbar, .nav-item {
+  font-family: 'Joystix', 'Courier New', monospace;
+  font-weight: normal;
+}
+
+// Sub-headings (h2, h3)
+h2, h3, .subheading, .sub-title {
+  font-family: 'Pinmold', 'Verdana', 'Geneva', sans-serif;
+  font-weight: normal;
+  line-height: 1.4;
+}
+
+// Body text elements
+p, .description, .text-content, .body-text {
+  font-family: 'Orange Kid', 'Comic Sans MS', 'Trebuchet MS', sans-serif;
+  font-weight: normal;
+  line-height: 1.6;
+}
+
+// ===== RESPONSIVE FONT SIZES =====
+
+// Base font size adjustments
+html {
+  font-size: 16px;
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 12px;
+  }
+}
+
+// Responsive heading sizes
+h1, .main-heading {
+  font-size: 3rem;
+
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 2rem;
+  }
+}
+
+h2, .subheading {
+  font-size: 2rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.8rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+  }
+}
+
+h3, .sub-title {
+  font-size: 1.5rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.3rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.2rem;
+  }
+}
+
+// ===== FONT LOADING OPTIMIZATION =====
+
+// Prevent invisible text during font load
+.fonts-loading {
+  visibility: hidden;
+}
+
+.fonts-loaded {
+  visibility: visible;
+}
+
+// ===== FONT PERFORMANCE =====
+
+// Optimize font rendering
+* {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ===== FONT FALLBACKS =====
+
+// Ensure text remains visible during font load
+@supports (font-display: swap) {
+  @font-face {
+    font-family: 'Astroz';
+    font-display: swap;
+    src: url('/public/assets/fonts/astroz.woff2') format('woff2'),
+        url('/public/assets/fonts/Astroz\ Trial.ttf') format('truetype');
+  }
+
+  @font-face {
+    font-family: 'Joystix';
+    font-display: swap;
+     src: url('/public/assets/fonts/joystix.woff2') format('woff2'),
+          url('/public/assets/fonts/joystix\ monospace.otf') format('opentype'),;
+  }
+
+  @font-face {
+    font-family: 'Orange Kid';
+    font-display: swap;
+    src: url('/public/assets/fonts/orange-kid.woff2') format('woff2'),   
+       url('/public/assets/fonts/Orange\ Kid.ttf') format('truetype');
+  }
+
+  @font-face {
+    font-family: 'Pinmold';
+    font-display: swap;
+    src: url('/public/assets/fonts/pinmold.woff2') format('woff2'),    
+       url('/public/assets/fonts/Pinmolddemo-jEaxv.otf') format('opentype');
+  }
+}

@@ -1,6 +1,16 @@
 const Dotenv = require('dotenv-webpack');
 
 module.exports = {
+   css: {
+    loaderOptions: {
+      sass: {
+        additionalData: `
+          @import "@/assets/styles/variables.scss";
+          @import "@/assets/styles/fonts.scss";
+        `
+      }
+    }
+  },
   configureWebpack: {
     plugins: [
       new Dotenv()

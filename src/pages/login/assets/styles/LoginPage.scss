@@ -1,0 +1,424 @@
+// Import global styles
+@import '../../../../assets/styles/variables.scss';
+@import '../../../../assets/styles/fonts.scss';
+
+.login-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, $bg-dark 0%, $bg-dark-alt 100%);
+  font-family: 'Orange Kid', sans-serif;
+  overflow-x: hidden;
+  position: relative;
+}
+
+// Marquee Banner
+.marquee-banner {
+  background:radial-gradient(
+    ellipse at left center,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.7) 60%,
+    rgba(0, 0, 0, 0.2) 90%,
+    transparent 100%
+  );
+  height: 80px;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 3;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+  
+  // Overlap effect
+  margin-left: -50px;
+  
+  .marquee-content {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    white-space: nowrap;
+    
+    .brand-text {
+      font-family: 'Astroz', sans-serif;
+      font-size: 2.5rem;
+      color: $text-cream;
+      margin-right: 100px;
+      text-shadow: 0 0 20px rgba($accent-orange, 0.6);
+      letter-spacing: 2px;
+      font-weight: bold;
+      
+      &:hover {
+        color: $accent-yellow;
+        text-shadow: 0 0 30px rgba($accent-yellow, 0.8);
+      }
+    }
+  }
+}
+
+// Main Content Layout
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  min-height: calc(100vh - 80px);
+  position: relative;
+  
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr 350px;
+  }
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: 300px 1fr;
+  }
+}
+
+// Hero Section (Mandalorian Background)
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  
+  .hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center left;
+    background-repeat: no-repeat;
+    filter: brightness(0.8) contrast(1.1);
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        to right,
+        rgba($bg-dark, 0.3) 0%,
+        rgba($bg-dark, 0.1) 50%,
+        rgba($bg-dark, 0.7) 100%
+      );
+    }
+  }
+  
+  .logo-container {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    z-index: 5;
+    
+    .logo-image {
+      height: 80px;
+      width: auto;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+      transition: all 0.3s ease;
+      
+      &:hover {
+        filter: drop-shadow(0 6px 16px rgba($accent-orange, 0.4));
+      }
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .logo-container {
+      top: 20px;
+      left: 20px;
+      
+      .logo-image {
+        height: 60px;
+      }
+    }
+  }
+}
+
+// Login Section (Black Box)
+.login-section {
+  background:radial-gradient(
+    ellipse at left center,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.7) 60%,
+    rgba(0, 0, 0, 0.2) 90%,
+    transparent 100%
+  );
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 3;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+  
+  // Overlap effect
+  margin-left: -50px;
+  
+  @media (max-width: 1200px) {
+    margin-left: -30px;
+  }
+  
+  @media (max-width: 768px) {
+    margin-left: 0;
+    border-left: none;
+    backdrop-filter: blur(5px);
+  }
+  
+  .login-content {
+    padding: 60px 40px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+    @media (max-width: 768px) {
+      padding: 40px 20px;
+    }
+  }
+}
+
+// Welcome Text
+.welcome-text {
+  margin-bottom: 40px;
+  
+  .main-heading {
+    font-family: 'Joystix', sans-serif;
+    font-size: 2.8rem;
+    color: $text-orange;
+    margin-bottom: 15px;
+    text-shadow: 0 0 20px rgba($accent-orange, 0.4);
+    line-height: 1.2;
+    
+    @media (max-width: 768px) {
+      font-size: 2.2rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 1.8rem;
+    }
+  }
+  
+  .sub-heading {
+    font-family: 'Joystix', sans-serif;
+    font-size: 1.4rem;
+    color: $text-cream;
+    margin-bottom: 20px;
+    font-weight: 300;
+    
+    @media (max-width: 768px) {
+      font-size: 1.2rem;
+    }
+  }
+  
+  .description {
+    font-family: 'Orange Kid', sans-serif;
+    font-size: 1rem;
+    color: rgba($text-cream, 0.8);
+    line-height: 1.6;
+    max-width: 280px;
+    margin: 0 auto;
+    
+    @media (max-width: 768px) {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// Login Button
+.login-button-container {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 20px;
+}
+
+.google-login-btn {
+  width: 100%;
+  background: linear-gradient(135deg, $accent-orange 0%, $accent-yellow 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-family: 'Joystix', sans-serif;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba($accent-orange, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index:10;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba($accent-orange, 0.5);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .google-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  
+  span {
+    white-space: nowrap;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    padding: 14px 20px;
+    
+    .google-icon {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+// Loading Spinner
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba($accent-orange, 0.3);
+    border-top: 3px solid $accent-orange;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .marquee-banner {
+    height: 60px;
+    
+    .marquee-content .brand-text {
+      font-size: 2rem;
+      margin-right: 60px;
+    }
+  }
+  
+  .main-content {
+    min-height: calc(100vh - 60px);
+  }
+}
+
+@media (max-width: 480px) {
+  .marquee-banner {
+    height: 50px;
+    
+    .marquee-content .brand-text {
+      font-size: 1.5rem;
+      margin-right: 40px;
+    }
+  }
+  
+  .main-content {
+    min-height: calc(100vh - 50px);
+  }
+  
+  .hero-section .logo-container {
+    top: 15px;
+    left: 15px;
+    
+    .logo-image {
+      height: 50px;
+    }
+  }
+  
+  .login-section .login-content {
+    padding: 30px 15px;
+  }
+  
+  .gaming-icons {
+    gap: 15px;
+    margin-bottom: 25px;
+    
+    .gaming-svg {
+      width: 30px;
+      height: 30px;
+    }
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .login-section {
+    background: #000000;
+    border-left-color: #FFFFFF;
+  }
+  
+  .google-login-btn {
+    background: #FFFFFF;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .marquee-content {
+    animation: none;
+  }
+  
+  .gaming-svg,
+  .logo-image {
+    animation: none;
+  }
+  
+  .google-login-btn {
+    transition: none;
+  }
+}
+
+// Dark mode improvements
+@media (prefers-color-scheme: dark) {
+  .login-page {
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+  }
+  
+  .login-section {
+    background: rgba(0, 0, 0, 0.98);
+  }
+}
