@@ -16,7 +16,7 @@
 <section class="hero"></section>
 
 <section class="submit form">
-    <div v-if="!userHasParticipated" class="participation-form">
+    <div v-if="!userHasParticipated && !hasEventStarted" class="participation-form">
         <form v-on:submit.prevent="submitParticipation">
             <div class="FormTitle">
                 <h1>Lets Play!</h1>
@@ -92,87 +92,92 @@
             </div>
         </form>
     </div>
-    <div  v-else-if="userInfo" class="IfUserIsAParticipant">
+</section>
+
+<section  v-if="userInfo && userHasParticipated" class="IfUserIsAParticipant">
         <h1>Welcome {{ userInfo.gameName }}</h1> 
-        <section class="requests">
-    <div v-if="isTeamCreator && !hasEventStarted">
-        <h2>
-            Pending Join Requests
-        </h2>
-        <div v-if="requestsLoading">Loading requests...</div>
-        <div v-else-if="teamRequests.length === 0">No pending requests</div>
-        <ul v-else>
-            <li v-for="req in teamRequests" :key="req.id">
-                <p>Name: {{ req.requesterName }}</p>
-                <p>Game Name: {{ req.requesterGameName }}</p>
-                <p>BITS ID: {{ req.requesterBitsID }}</p>
-                <p>Email: {{ req.requesterEmail }}</p>
-                <button @click="acceptRequest(req)">Accept</button>
-                <button @click="declineRequest(req)">Decline</button>
-            </li>
-        </ul>
-    </div>
-
-    <div v-if="teamMembers.length >= 0 && userInfo" class="team-Members">
-        <h2>Your Team: {{ userInfo.teamId }}</h2>
-        <h3>Members:</h3>
-        <ul>
-            <li v-for="member in teamMembers" :key="member.id">
-                {{ member.gameName }} ({{ member.bitsID }}) - {{ member.email }}
-            </li>
-        </ul>
-    </div>
-    <div v-if="userJoinRequest && userInfo">
-        <h2>Your Request Status</h2>
-        <div v-if="userJoinRequest.status === 'pending'">
-            <p>Your request to join team {{ userJoinRequest.teamId }} is pending approval.</p>
-        </div>
-        <div v-else-if="userJoinRequest.status === 'accepted'">
-            <p>Your request has been accepted! You are now part of team {{ userJoinRequest.teamId }}.</p>
-            <button @click="fetchTeamData(userInfo)">View Team Details</button>
-        </div>
-        <div v-else-if="userJoinRequest.status === 'rejected'">
-            <p>Your request to join team {{ userJoinRequest.teamId }} has been rejected.</p>
-            <div>
-                <label>Enter New Team ID:</label>
-                <input v-model="newTeamId" required>
-                <button @click="submitNewRequest">Submit New Request</button>
+        <div class="requests">
+            <div v-if="isTeamCreator && !hasEventStarted">
+                <h2>
+                    Pending Join Requests
+                </h2>
+                
+                <div v-if="requestsLoading">
+                    Loading requests...
+                </div>
+                
+                <div v-else-if="teamRequests.length === 0">
+                    No pending requests
+                </div>
+                
+                <ul v-else>
+                    <li v-for="req in teamRequests" :key="req.id">
+                        <p>Name: {{ req.requesterName }}</p>
+                        <p>Game Name: {{ req.requesterGameName }}</p>
+                        <p>BITS ID: {{ req.requesterBitsID }}</p>
+                        <p>Email: {{ req.requesterEmail }}</p>
+                        <button @click="acceptRequest(req)">
+                            Accept
+                        </button>
+                        <button @click="declineRequest(req)">
+                            Decline
+                        </button>
+                    </li>
+                </ul>
             </div>
+
+            <div v-if="teamMembers.length >= 0 && userInfo && userHasParticipated" class="team-Members">
+                <h2>Your Team: {{ userInfo.teamId }}</h2>
+                <h3>Members:</h3>
+                <ul>
+                    <li v-for="member in teamMembers" :key="member.id">
+                        {{ member.gameName }} ({{ member.bitsID }}) - {{ member.email }}
+                    </li>
+                </ul>
+            </div>
+    
+            <div v-if="userJoinRequest && userInfo">
+                <h2>Your Request Status</h2>
+
+                <div v-if="userJoinRequest.status === 'pending'">
+                    <p>Your request to join team {{ userJoinRequest.teamId }} is pending approval.</p>
+                </div>
+        
+                <div v-else-if="userJoinRequest.status === 'accepted'">
+                    <p>
+                        Your request has been accepted! You are now part of team {{ userJoinRequest.teamId }}.
+                    </p>
+                    <button @click="fetchTeamData(userInfo)">View Team Details</button>
+                </div>
+        
+                <div v-else-if="userJoinRequest.status === 'rejected'">
+                    <p>
+                        Your request to join team {{ userJoinRequest.teamId }} has been rejected.
+                    </p>
+            
+                    <div>
+                        <label>Enter New Team ID:</label>
+                        <input v-model="newTeamId" required>
+
+                        <button @click="submitNewRequest">Submit New Request</button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
-    </div>
-</section>
 
-    </div>
-</section>
-
+    </section>
 
 </template>
 
 
 
 <script>
-/*eslint-disable*/
-/* Leaving this work here, I was doing this:
-Now time to create another variable which will check if the event is live or not
-create another database for the Head of sites
-If the head of site logs in, then they will see other stuff: 
-- button to make event live, (homepage)
-- button to edit and update each player stat (leaderboard section)
-- button to conclude a match in the tournament (event's section)
 
-Also, as this is a scrap site, the database for events will be made manually
-same applies for the database for Head of this site
-
-Other things to do:
-- Create the section for when user does exist, i.e., has taken part in the compition
-- add a logout button on the homepage
-- Create playerStat and teamStat database, and create the logic so that the admin only can edit the stats
-- Now create the leaderboard ranking logic acc to the updated stats, have two sections, one for player and other for team
-- Create the fame section in homepage which shows the current top team and it's members, and the current top max amount of players allowed in the game as well
-- display the events on event page, have a logic to check if a particular match is done or not
-*/
-
-import { onBeforeMount } from 'vue';
+import { onBeforeMount, ref, watch, onMounted } from 'vue';
 import Toggle from '@vueform/toggle'
 import '@vueform/toggle/themes/default.css'
 // eslint-disable-next-line
@@ -180,8 +185,7 @@ import { useRouter } from 'vue-router';
 import firebaseApp from '../../firebase'
 import { onAuthStateChanged } from "firebase/auth";
 import getUser from '../../getUserData';
-import { ref, onMounted, watch } from 'vue';
-import { onSnapshot, query, where, collection, orderBy, updateDoc, arrayUnion, limit } from 'firebase/firestore';
+import { query, where, collection, orderBy, updateDoc, arrayUnion, limit } from 'firebase/firestore';
 
 import { 
     getFirestore, 
@@ -239,6 +243,12 @@ export default{
             })
         });
 
+        onMounted(async ()=>{
+            const eventStatusRef = doc(db,"events","currentEvent");
+            const eventStatusDoc = getDoc(eventStatusRef);
+            hasEventStarted.value = (await eventStatusDoc).data().eventStatus;
+        })
+
         async function submitParticipation() 
         {
             console.log("Function is called");
@@ -271,11 +281,11 @@ export default{
             
                 // Step 4: Mark user as participated
                 userHasParticipated.value = true;
-                //eslint-ignore-next-line
+                //eslint-disable-next-line
                 alert('Participation successful!');
                 userInfo.value = await getUser.fetchUserData(user);
                 } catch (error) {
-                    console.error('Error submitting participation:', error);
+                    console.error('Error submitting participation:', error);//eslint-disable-next-line
                     alert('Failed to submit participation. Please try again.');
                 }finally {
                     isSubmitting.value = false;
@@ -496,7 +506,7 @@ export default{
                 console.error("Error declining request:", error);
             }
         }
-
+//eslint-disable-next-line
         async function submitNewRequest(){
             if (!newTeamId.value.trim()) return;
             
@@ -560,5 +570,28 @@ export default{
 }
 </script>
 
-<style>
+<style scoped>
+.main-nav, .page-nav {
+  height: 50px;
+  background: #222;
+  color: #fff;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+.FormTitle h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+.personal-info label {
+  display: block;
+  margin-top: 10px;
+}
+.personal-info input, .personal-info textarea {
+  margin-bottom: 10px;
+  width: 300px;
+  padding: 6px;
+}
+.submit-section {
+  margin-top: 20px;
+}
 </style>

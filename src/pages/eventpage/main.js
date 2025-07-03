@@ -20,5 +20,3 @@ import firebaseApp from '../../firebase'
 // console.log(app)
 firebaseApp.app;
 createApp(Login).mount('#eventpage')
-
-console.log(process.env)
