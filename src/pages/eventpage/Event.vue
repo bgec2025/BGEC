@@ -80,10 +80,10 @@
             <input v-model="playerStatForm.teamId" required />
           </label>
           <label>Game Name:
-            <input v-model="playerStatForm.gameName" required />
+            <input v-model="playerStatForm.gameName"  />
           </label>
           <label>User Name:
-            <input v-model="playerStatForm.userName" required />
+            <input v-model="playerStatForm.userName" />
           </label>
           <label>Kills:
             <input type="number" v-model.number="playerStatForm.kills" required />
@@ -219,7 +219,7 @@ export default {
         const minMaxRef = doc(db, "events", "minMaxDoc");
         minMaxUpdate(minMaxRef, statTypeTeam, teamStatForm, playerStatForm)
         //eslint-disable-next-line
-        const minMaxdoc = (await getDoc(minMaxRef));
+        const minMaxDoc = (await getDoc(minMaxRef));
         //eslint-disable-next-line
         const minMaxDocData = minMaxDoc.data();
         if (statTypeTeam.value) {
