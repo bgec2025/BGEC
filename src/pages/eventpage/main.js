@@ -19,4 +19,4 @@ import firebaseApp from '../../firebase'
 // const app = initializeApp(firebaseConfig);
 // console.log(app)
 firebaseApp.app;
-createApp(Login).mount('#eventpage')
+createApp(Login).mount('#event')

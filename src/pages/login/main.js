@@ -7,6 +7,4 @@ import firebaseApp from '../../firebase';
 import '../../assets/styles/main.scss';
 
 firebaseApp.app;
-createApp(Login).use(router).mount('#loginpage');
-
-console.log(process.env);
+createApp(Login).use(router).mount('#login');

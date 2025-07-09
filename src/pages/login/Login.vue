@@ -50,10 +50,10 @@ export default {
       }
       
       if (route.path == '/Login' || route.path == '/Register') {
-        router.replace('/');
+        // eslint-disable-next-line
+        window.location.href = '/index.html';
       }
-      // eslint-disable-next-line
-      window.location.href = '/homepage.html';
+      
     }
   });
 });

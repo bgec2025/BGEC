@@ -1,12 +1,13 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-// import Login from '../Login.vue';
-// import RegisterPage from '../Pages/RegisterPage.vue';
-// import LoginPage from '../Pages/LoginPage.vue'
+import HomePage from '../../home/Home.vue';
+import EventPage from '../../eventpage/Event.vue';
+import LeaderboardPage from '../../leaderboard/Leaderboard.vue';
 
 const routes = [
-  { path: '/',name: "Login sucessful", component: ()=>import('../Login.vue') },
-  { path: '/Register',name: "Register Page", component: ()=>import('../Pages/RegisterPage.vue') },
-  { path: '/Login', name:"Login Page", component: ()=>import('../Pages/LoginPage.vue') }
+  {path: '/home' , name: 'HomePage', component: HomePage},
+  {path: '/event' , name: 'EventPage', component: EventPage},
+  {path: '/leaderboard' , name: 'LeaderboardPage', component: LeaderboardPage},
+  { path: '/login', name:"Login Page", component: ()=>import('../Pages/LoginPage.vue') }
 ];
 
 const router = createRouter({

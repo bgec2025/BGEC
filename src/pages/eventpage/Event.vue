@@ -1,4 +1,6 @@
 <template>
+  <div class="event-page">
+    <NavigationBar />
   <h1>This is a event page</h1>
   <div class="userInfoDisplay">
     <div v-if="loadingUserInfo">
@@ -111,10 +113,11 @@
 
     </div>
   </section>
-
+</div>
 </template>
 
 <script>
+import NavigationBar from '@/components/NavigationBar.vue';
 import { onBeforeMount, ref, onMounted } from 'vue';
 import Toggle from '@vueform/toggle/src/Toggle';
 import '@vueform/toggle/themes/default.css'
@@ -132,7 +135,9 @@ const userInfo = ref(null);
 
 export default {
   name: "EventPage",
-  components: { Toggle },
+  components: { 
+    Toggle,
+  NavigationBar },
   setup() {
     const isEventLive = ref(false);
     const isAdmin = ref(false);
