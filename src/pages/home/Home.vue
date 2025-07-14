@@ -1,6 +1,6 @@
 
 <template>
-    <nav class="main-nav"></nav>
+        <nav class="main-nav"></nav>
     <nav class="page-nav"></nav>
 <h1>This is a Home page</h1>
 <div v-if="userInfo" class="userInfoTrialDisplay">
