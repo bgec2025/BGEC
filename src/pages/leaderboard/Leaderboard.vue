@@ -1,4 +1,6 @@
 <template>
+    <div class="leaderboard">
+        <NavigationBar />
     <h1>This is a leaderboard page</h1>
     <div v-if="userInfo">
         <p>Welcome, {{ userInfo.displayName }}</p>
@@ -49,9 +51,7 @@
         </div>
 
     </section>
-
-
-
+</div>
 </template>
 
 
@@ -59,9 +59,13 @@
 import { ref, onMounted, watch } from 'vue';
 import { getFirestore, collection, query, orderBy, getDocs } from 'firebase/firestore';
 import firebaseApp from '../../firebase';
+import NavigationBar from '@/components/NavigationBar.vue';
 
 export default {
     name: "LeaderboardPage",
+    components: {
+        NavigationBar
+    },
     setup() {
         const db = getFirestore(firebaseApp.app);
         const showTeams = ref(false); // false = player, true = team

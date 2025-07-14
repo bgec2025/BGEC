@@ -1,7 +1,7 @@
 
 <template>
-        <nav class="main-nav"></nav>
-    <nav class="page-nav"></nav>
+    <div class="home-page">
+    <NavigationBar />
 <h1>This is a Home page</h1>
 <div v-if="userInfo" class="userInfoTrialDisplay">
     <p>Hello there, {{ userInfo.displayName }}</p>
@@ -170,13 +170,12 @@
         </div>
 
     </section>
-
+    </div>
 </template>
 
 
 
 <script>
-
 import { onBeforeMount, ref, watch, onMounted } from 'vue';
 import Toggle from '@vueform/toggle'
 import '@vueform/toggle/themes/default.css'
@@ -196,11 +195,14 @@ import {
     getDocs 
 } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
+import NavigationBar from '@/components/NavigationBar.vue';
 
 const userInfo = ref(null);
 
 export default{
-    components: { Toggle },
+    components: { 
+        Toggle,
+        NavigationBar},
     name: "HomePage",
     setup()
     {
@@ -571,13 +573,6 @@ export default{
 </script>
 
 <style scoped>
-.main-nav, .page-nav {
-  height: 50px;
-  background: #222;
-  color: #fff;
-  padding: 10px;
-  margin-bottom: 20px;
-}
 .FormTitle h1 {
   font-size: 2rem;
   margin-bottom: 1rem;

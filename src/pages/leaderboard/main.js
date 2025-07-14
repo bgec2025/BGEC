@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
-import Login from './Leaderboard.vue';
 // import { initializeApp } from "firebase/app";
 import firebaseApp from '../../firebase'
+import Leaderboard from './Leaderboard.vue';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -19,6 +19,4 @@ import firebaseApp from '../../firebase'
 // const app = initializeApp(firebaseConfig);
 // console.log(app)
 firebaseApp.app;
-createApp(Login).mount('#leaderboard')
-
-console.log(process.env)
+createApp(Leaderboard).mount('#leaderboard')
