@@ -40,7 +40,31 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Esporte';
+  src: url('/public/assets/fonts/Esporte\ Personal\ Use\ Only.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Integral-CF';
+  src: url('/public/assets/fonts/Fontspring-DEMO-integralcf-regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 // ===== FONT UTILITY CLASSES =====
+
+.font-Esporte {
+  font-family: 'Esporte',serif;
+}
+
+.font-Integral_CF {
+  font-family: 'Integral-CF', sans-serif;
+}
 
 // Main heading font
 .font-astroz {
