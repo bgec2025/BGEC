@@ -5,8 +5,12 @@ module.exports = {
     loaderOptions: {
       sass: {
         additionalData: `
-          @import "@/assets/styles/variables.scss";
-          @import "@/assets/styles/fonts.scss";
+          @import "@/assets/styles/global.scss";
+        `
+      },
+       scss: {
+        additionalData: `
+          @import "@/assets/styles/global.scss";
         `
       }
     }
