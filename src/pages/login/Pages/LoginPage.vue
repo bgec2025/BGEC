@@ -5,12 +5,13 @@
     <!-- Black Banner with Marquee -->
     <div class="marquee-banner">
       <div class="marquee-content" ref="marqueeRef">
-        <span class="brand-text">WreckHavoc</span>
-        <span class="brand-text">WreckHavoc</span>
-        <span class="brand-text">WreckHavoc</span>
-        <span class="brand-text">WreckHavoc</span>
-        <span class="brand-text">WreckHavoc</span>
-        <span class="brand-text">WreckHavoc</span>
+        <span class="brand-text">WRECKHAVOC</span>
+        <span class="brand-text">WRECKHAVOC</span>
+        <span class="brand-text">WRECKHAVOC</span>
+        <span class="brand-text">WRECKHAVOC</span>
+        <span class="brand-text">WRECKHAVOC</span>
+        <span class="brand-text">WRECKHAVOC</span>
+        
       </div>
     </div>
 

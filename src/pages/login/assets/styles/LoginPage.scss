@@ -1,11 +1,10 @@
 // Import global styles
-@import '../../../../assets/styles/variables.scss';
-@import '../../../../assets/styles/fonts.scss';
+@import '../../../../assets/styles/global.scss';
 
 .login-page {
   min-height: 100vh;
   background: linear-gradient(135deg, $bg-dark 0%, $bg-dark-alt 100%);
-  font-family: 'Orange Kid', sans-serif;
+  font-family: 'Esporte', sans-serif;
   overflow-x: hidden;
   position: relative;
 }
@@ -38,17 +37,17 @@
     white-space: nowrap;
     
     .brand-text {
-      font-family: 'Astroz', sans-serif;
+      font-family: 'Esporte', sans-serif;
       font-size: 2.5rem;
-      color: $text-cream;
+      color: $cream;
       margin-right: 100px;
-      text-shadow: 0 0 20px rgba($accent-orange, 0.6);
+      text-shadow: 0 0 20px rgba($dark-red, 0.6);
       letter-spacing: 2px;
       font-weight: bold;
       
       &:hover {
-        color: $accent-yellow;
-        text-shadow: 0 0 30px rgba($accent-yellow, 0.8);
+        color: yellow;
+        text-shadow: 0 0 30px rgba($red, 0.8);
       }
     }
   }
@@ -117,7 +116,7 @@
       transition: all 0.3s ease;
       
       &:hover {
-        filter: drop-shadow(0 6px 16px rgba($accent-orange, 0.4));
+        filter: drop-shadow(0 6px 16px rgba($orange, 0.4));
       }
     }
   }
@@ -181,11 +180,11 @@
   margin-bottom: 40px;
   
   .main-heading {
-    font-family: 'Joystix', sans-serif;
+    font-family: 'Integral-CF-Bold', sans-serif;
     font-size: 2.8rem;
-    color: $text-orange;
+    color: $orange;
     margin-bottom: 15px;
-    text-shadow: 0 0 20px rgba($accent-orange, 0.4);
+    text-shadow: 0 0 20px rgba(yellow, 0.4);
     line-height: 1.2;
     
     @media (max-width: 768px) {
@@ -198,9 +197,9 @@
   }
   
   .sub-heading {
-    font-family: 'Joystix', sans-serif;
+    font-family: 'Electroharmonix', sans-serif;
     font-size: 1.4rem;
-    color: $text-cream;
+    color: $cream;
     margin-bottom: 20px;
     font-weight: 300;
     
@@ -210,9 +209,9 @@
   }
   
   .description {
-    font-family: 'Orange Kid', sans-serif;
+    font-family: 'Integral-CF-Regular', sans-serif;
     font-size: 1rem;
-    color: rgba($text-cream, 0.8);
+    color: rgba($cream, 0.8);
     line-height: 1.6;
     max-width: 280px;
     margin: 0 auto;
@@ -232,19 +231,19 @@
 
 .google-login-btn {
   width: 100%;
-  background: linear-gradient(135deg, $accent-orange 0%, $accent-yellow 100%);
+  background: linear-gradient(135deg, $orange 0%, yellow 100%);
   color: white;
   border: none;
   border-radius: 12px;
   padding: 16px 24px;
-  font-family: 'Joystix', sans-serif;
+  font-family: 'Integral-Cf-Regular', sans-serif;
   font-size: 0.9rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba($accent-orange, 0.3);
+  box-shadow: 0 4px 15px rgba($orange, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,7 +268,7 @@
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba($accent-orange, 0.5);
+    box-shadow: 0 8px 25px rgba($orange, 0.5);
     
     &::before {
       left: 100%;
@@ -316,8 +315,8 @@
   .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid rgba($accent-orange, 0.3);
-    border-top: 3px solid $accent-orange;
+    border: 3px solid rgba($orange, 0.3);
+    border-top: 3px solid $orange;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }

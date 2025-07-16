@@ -1,0 +1,64 @@
+//-------------------FONTS------------------------
+
+ //1) ESPORTE
+@font-face {
+    font-family : 'Esporte';
+    src: url('/public/assets/fonts/Esporte\ Personal\ Use\ Only.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+    font-family: 'Esporte', serif;
+}
+
+//2) INTEGRAL CF REGULAR
+@font-face {
+    font-family : 'Integral-CF-Regular';
+    src: url('/public/assets/fonts/Fontspring-DEMO-integralcf-regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+    font-family: 'Integral-CF', sans-serif;
+}
+
+//3) INTEGRAL CF BOLD
+@font-face {
+    font-family : 'Integral-CF-Bold';
+    src: url('/public/assets/fonts/Fontspring-DEMO-integralcf-bold.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+    font-family: 'Integral-CF', sans-serif;
+
+}
+
+//4) ELECTROHARMONIX
+@font-face {
+    font-family : 'Electroharmonix';
+    src: url('/public/assets/fonts/Electroharmonix.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+    font-family: 'Electroharmonix', sans-serif;
+}
+
+.fonts-loading {
+  visibility: hidden;
+}
+
+.fonts-loaded {
+  visibility: visible;
+}
+
+//-------------------Color Pallete(new and updated)  ------------------------
+//These are the theme colours, other colours can be used for minor purposes
+
+$brown: #340307;
+$dark-red: #8E1D22;
+$red:#C40817;
+$orange: #F15229;
+$cream: #FFD19D;
+$light-brown: #947153;
+
+$bg-dark: #0F0F0F;        
+$bg-dark-alt: #2A2A2A;
+
