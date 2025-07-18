@@ -49,7 +49,7 @@ export default {
         }, {merge: true});
       }
       
-      if (route.path == '/Login' || route.path == '/Register') {
+      if (route.path == '/Login') {
         // eslint-disable-next-line
         window.location.href = '/index.html';
       }
