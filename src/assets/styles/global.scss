@@ -53,11 +53,19 @@
 //These are the theme colours, other colours can be used for minor purposes
 
 $brown: #340307;
+$brown30: rgba(52, 3, 7, 0.3); // 30% opacity
+
 $dark-red: #8E1D22;
 $red:#C40817;
 $orange: #F15229;
 $cream: #FFD19D;
+$cream20: rgba(255, 209, 157, 0.20); // 20% opacity
+$cream90: rgba(255, 209, 157, 0.9); // 20% opacity
+$cream80: rgba(255, 209, 157, 0.8); // 20% opacity
+
 $light-brown: #947153;
+$light-brown10: rgba(148, 113, 83, 0.1); // 10% opacity version of $light-brown
+
 
 $bg-dark: #0F0F0F;        
 $bg-dark-alt: #2A2A2A;
