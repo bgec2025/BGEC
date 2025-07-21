@@ -1,74 +1,101 @@
 <template>
   <div class="leaderboard">
     <NavigationBar />
-    <h1>This is a leaderboard page</h1>
+    <h1>LeaderBoard</h1>
+
     <div v-if="userInfo" class="user-info">
-      <p>Welcome, {{ userInfo.displayName }}</p>
-      <img :src="userInfo.photoURL" alt="User Photo" referrerpolicy="no-referrer" />
-      <p>Email: {{ userInfo.email }}</p>
+      <p class="welcome-text">Welcome, {{ userInfo.displayName }}</p>
+      <img :src="userInfo.photoURL" alt="User Photo" referrerpolicy="no-referrer" class="user-photo" />
+      <p class="email-text">Email: {{ userInfo.email }}</p>
     </div>
 
-    <section v-if="isEventLive" id="leaderboard">
-      <div class="toggle-buttons">
-        <button :class="{ active: !showTeams }" @click="showTeams = false">Player Rankings</button>
-        <button :class="{ active: showTeams }" @click="showTeams = true">Team Rankings</button>
+    <section v-if="isEventLive" id="leaderboard-content">
+      <div class="toggle-buttons-section">
+        <div class="toggle-buttons">
+          <button :class="{ active: !showTeams }" @click="toggleRanking(false)">Player Rankings</button>
+          <button :class="{ active: showTeams }" @click="toggleRanking(true)">Team Rankings</button>
+        </div>
       </div>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th v-if="showTeams">Team Name</th>
-              <th v-else>Player Name</th>
-              <th>Total Points</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(entry, idx) in leaderboard" :key="entry.id" :class="{ highlight: entry.id === myOwnEntryId }"
-              @click="selectEntry(entry)" :ref="entry.id === myOwnEntryId ? 'myRow' : null">
-              <td>{{ idx + 1 }}</td>
-              <td v-if="showTeams">{{ entry.teamName }}</td>
-              <td v-else>{{ entry.gameName || entry.displayName || entry.userName }}</td>
-              <td>{{ entry.totalPoints ? entry.totalPoints.toFixed(2) : '0.00' }}</td>
-            </tr>
-          </tbody>
-        </table>
+
+      <div class="table-section">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th v-if="showTeams">Team Name</th>
+                <th v-else>Player Name</th>
+                <th>Total Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(entry, idx) in leaderboard" :key="entry.id" :class="{ highlight: entry.id === myOwnEntryId }"
+                @click="selectEntry(entry)" :ref="entry.id === myOwnEntryId ? 'myRow' : null">
+                <td>{{ idx + 1 }}</td>
+                <td v-if="showTeams">{{ entry.teamName }}</td>
+                <td v-else>{{ entry.gameName || entry.displayName || entry.userName }}</td>
+                <td>{{ entry.totalPoints ? entry.totalPoints.toFixed(2) : '0.00' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="actions">
+
+      <div class="actions bottom-actions">
         <button v-if="myRank !== null" @click="scrollToMyRank">
           Jump to My Rank
         </button>
       </div>
 
-      <div id="info-side-panel">
+      <div id="info-side-panel-section">
         <div v-if="selectedEntry" class="side-panel">
-          <h3>Details for {{ showTeams ? selectedEntry.teamName : selectedEntry.userName ||
+          <div class="side-panel-bg"></div>
+          <h3 class="side-panel-title">Details for {{ showTeams ? selectedEntry.teamName : selectedEntry.userName ||
             selectedEntry.displayName || selectedEntry.gameName }}</h3>
 
-          <ul>
+          <ul class="side-panel-list">
             <li v-for="item in entryDetails" :key="item.key">
               <strong>{{ item.label }}:</strong> {{ item.value }}
             </li>
           </ul>
-
         </div>
       </div>
-    </section>
-    <section v-else class="Event-not-started">
 
+      <section class="top-players-section" v-if="isEventLive && topThreePlayers.length > 0">
+        <h2 class="section-title">Top Players</h2>
+        <div class="top-players-carousel-wrapper">
+          <button @click="scrollCarousel('left')" class="carousel-nav-btn left-arrow">◀</button>
+          <div class="carousel-track" ref="carouselTrack">
+            <div class="top-player-card" v-for="(player, index) in topThreePlayers" :key="player.id">
+              <span class="rank-overlay">{{ index + 1 }}</span>
+              <div class="card-content">
+                <img :src="player.photoURL || '/public/assets/images/default-avatar.png'" alt="Player Avatar"
+                  class="player-avatar" />
+                <h4 class="player-name">{{ player.gameName || player.displayName || player.userName }}</h4>
+                <p class="player-points">{{ player.totalPoints.toFixed(2) }} Points</p>
+              </div>
+            </div>
+          </div>
+          <button @click="scrollCarousel('right')" class="carousel-nav-btn right-arrow">▶</button>
+        </div>
+      </section>
+    </section>
+    <section v-else class="event-not-started">
+      <p class="event-message">The event is not currently live. Please check back later!</p>
     </section>
   </div>
 </template>
 
+
 <script>
 import { ref, onMounted, watch, nextTick, computed } from 'vue';
 import { getFirestore, collection, query, orderBy, getDocs, getDoc, doc } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged } from 'firebase/auth'; // For auth
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import firebaseApp from '../../firebase';
 import NavigationBar from '@/components/NavigationBar.vue';
 import { gsap } from 'gsap';
 
-// Nicely formatted labels for each property
+
 const FIELD_LABELS = {
   id: 'ID',
   teamName: 'Team Name',
@@ -84,8 +111,8 @@ const FIELD_LABELS = {
   teamId: 'Team ID',
   userId: 'User ID',
   email: 'Email',
-  // Add other properties as needed...
 };
+
 
 const INFO_DISPLAY_ORDER = [
   'id',
@@ -96,9 +123,34 @@ const INFO_DISPLAY_ORDER = [
   'noramlizedSupportPoints', 'normalizedSupportPoints',
   'normalizedDeaths',
   'normalizedKills',
-  // Add other keys as needed, in desired order
 ];
 
+let audioContext;
+let clickSoundBuffer;
+
+async function loadClickSound() {
+  if (!audioContext) { // eslint-disable-next-line
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (!clickSoundBuffer) {
+    try {
+      const response = await fetch('/assets/sounds/click.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+      clickSoundBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    } catch (error) {
+      console.error("Error loading click sound:", error);
+    }
+  }
+}
+
+function playClickSound() {
+  if (clickSoundBuffer && audioContext) {
+    const source = audioContext.createBufferSource();
+    source.buffer = clickSoundBuffer;
+    source.connect(audioContext.destination);
+    source.start(0);
+  }
+}
 
 export default {
   name: 'LeaderboardPage',
@@ -107,14 +159,13 @@ export default {
     const db = getFirestore(firebaseApp.app);
     const auth = getAuth(firebaseApp.app);
 
-    const showTeams = ref(false); // false = player, true = team
+    const showTeams = ref(false);
     const leaderboard = ref([]);
     const userInfo = ref(null);
     const selectedEntry = ref(null);
     const currentUserId = ref(null);
     const isEventLive = ref(false);
 
-    // -- 1. Get current logged-in user info --
     onMounted(async () => {
       onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -130,16 +181,60 @@ export default {
           currentUserId.value = null;
         }
       });
+
       const eventDataRef = doc(db, "events", "currentEvent");
       const eventDoc = await getDoc(eventDataRef);
       if (eventDoc.exists()) {
         isEventLive.value = eventDoc.data().eventStatus;
       } else {
-        isEventLive.value = false; // Or handle as needed
+        isEventLive.value = false;
       }
+
+      await loadClickSound();
+
+      // Animate the heading
+      gsap.from("h1", { opacity: 0, y: -30, duration: 1, ease: "power3.out" });
+
+      // Animate user info (only if present)
+      nextTick(() => {// eslint-disable-next-line
+        if (document.querySelector(".user-info")) {
+          gsap.from(".user-info", {
+            opacity: 0, scale: 0.9, duration: 0.8, delay: 0.2, ease: "back.out(1.2)",
+            clearProps: "all"
+          });
+        }
+        // Animate toggle buttons (only once)
+        // eslint-disable-next-line
+        if (document.querySelectorAll(".toggle-buttons button").length) {
+          gsap.fromTo(".toggle-buttons button",
+            { opacity: 0, y: 20 },
+            { opacity: 1, y: 0, duration: 0.8, delay: 0.3, stagger: 0.12, clearProps: "all", ease: "power2.out" }
+          );
+        }
+        // Animate leaderboard
+        // eslint-disable-next-line
+        if (document.querySelector(".table-container")) {
+          gsap.from(".table-container", {
+            opacity: 0, y: 50, duration: 1, delay: 0.7, ease: "power3.out", clearProps: "all"
+          });
+        }
+        // Animate Jump button in
+        // eslint-disable-next-line
+        if (document.querySelector(".actions.bottom-actions button")) {
+          gsap.from(".actions.bottom-actions button", {
+            opacity: 0, scale: 0.8, duration: 0.8, delay: 1, ease: "elastic.out(1, 0.5)", clearProps: "all"
+          });
+        }
+        // Animate Top Players section only if present
+        // eslint-disable-next-line
+        if (document.querySelector(".top-players-section")) {
+          gsap.from(".top-players-section", {
+            opacity: 0, y: 50, duration: 1, delay: 1.1, ease: "power3.out", clearProps: "all"
+          });
+        }
+      });
     });
 
-    // -- 2. Fetch leaderboard data based on mode (team/player) --
     async function fetchLeaderboard() {
       const colName = showTeams.value ? 'teamRanking' : 'playerRanking';
       const q = query(collection(db, colName), orderBy('totalPoints', 'desc'));
@@ -147,56 +242,32 @@ export default {
       leaderboard.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       await nextTick();
+      gsap.from("tbody tr", { opacity: 0, x: -20, duration: 0.5, stagger: 0.05, ease: "power2.out" });
     }
 
     onMounted(fetchLeaderboard);
     watch(showTeams, fetchLeaderboard);
-    onMounted(() => {
-      // Animate the heading
-      gsap.from("h1", { duration: 1, opacity: 0, y: -45, ease: "power3.out" });
-      // Animate user info
-      gsap.from(".user-info", { duration: 1, opacity: 0, y: -25, delay: 0.2, ease: "power3.out" });
-      // Animate table and toggle buttons
-      gsap.from(".toggle-buttons, .table-container", { duration: 1.1, opacity: 0, y: 35, delay: 0.35, stagger: 0.2, ease: "power2.out" });
-    });
 
-    // Side panel GSAP animate ONLY when selectedEntry changes & panel is present
-    watch(selectedEntry, async (val) => {
-      if (val) {
-        await nextTick();// eslint-disable-next-line
-        const panel = document.querySelector('.side-panel');
-        if (panel) {
-          gsap.from(panel, { duration: 0.6, opacity: 0, y: 38, scale: 0.94, ease: "power3.out" });
-        }
-      }
-    });
-    // -- 3. Get "my own entry id" to highlight and scroll to row --
     const myOwnEntryId = computed(() => {
       if (!userInfo.value || leaderboard.value.length === 0) return null;
       if (!showTeams.value) {
-        // Player view: match by entry.userId or entry.id
-        // Prefer entry.userId if available, else fallback to entry.id === currentUserId
         const userId = userInfo.value.uid;
-        // First try userId property
         const found = leaderboard.value.find(
           (entry) => entry.userId === userId || entry.id === userId
         );
         return found ? found.id : null;
       } else {
-        // Team view: need user's team id, assume userInfo.value.teamId or similar
-        const userTeamId = userInfo.value && userInfo.value.teamId; // This may require extra logic!
+        const userTeamId = userInfo.value && userInfo.value.teamId;
         if (userTeamId) {
           const found = leaderboard.value.find(
             (entry) => entry.teamId === userTeamId || entry.id === userTeamId
           );
           return found ? found.id : null;
         }
-        // No user team: fallback to null
         return null;
       }
     });
 
-    // -- 4. Find "my rank": index in leaderboard of myOwnEntryId --
     const myRank = computed(() => {
       if (!myOwnEntryId.value) return null;
       const idx = leaderboard.value.findIndex(entry => entry.id === myOwnEntryId.value);
@@ -205,7 +276,6 @@ export default {
 
     const entryDetails = computed(() => {
       if (!selectedEntry.value) return [];
-      // Only show "known" keys (filtered)
       return INFO_DISPLAY_ORDER
         .map((key) => {
           if (selectedEntry.value[key] !== undefined && selectedEntry.value[key] !== null) {
@@ -216,21 +286,57 @@ export default {
             }
           }
         })
-        .filter(Boolean); // remove undefineds
+        .filter(Boolean);
     });
 
-    // -- 5. Scroll to "my row" --
-    function scrollToMyRank() {
+    const topThreePlayers = computed(() => {
+      return leaderboard.value.slice(0, 3);
+    });
+
+    const carouselTrack = ref(null);
+    const scrollCarousel = (direction) => {
+      playClickSound();
+      if (carouselTrack.value) {
+        const cardWidth = 300; // Match the width of .top-player-card
+        const gapWidth = 32; // Match the gap: 2rem = 32px
+        const scrollAmount = cardWidth + gapWidth;
+        gsap.to(carouselTrack.value, { scrollLeft: carouselTrack.value.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount), duration: 0.5, ease: "power2.out" });
+      }
+    };
+
+
+    async function scrollToMyRank() {
+      playClickSound();
       if (!myOwnEntryId.value) return;
-      nextTick(() => {
-        //eslint-disable-next-line
-        const row = document.querySelector('tr.highlight');
-        if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
+      await nextTick();// eslint-disable-next-line
+      const row = document.querySelector('tr.highlight');
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        gsap.to(row, { scale: 1.02, duration: 0.2, yoyo: true, repeat: 1, ease: "power1.inOut" });
+      }
+    }
+
+    // New: Scroll to player card function
+    function scrollToPlayerCard() {// eslint-disable-next-line
+      const panel = document.getElementById('info-side-panel-section'); // Target the new section wrapper ID
+      if (panel) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function toggleRanking(isTeam) {
+      playClickSound();
+      showTeams.value = isTeam;
     }
 
     function selectEntry(entry) {
+      playClickSound();
       selectedEntry.value = entry;
+      gsap.fromTo(".side-panel",
+        { opacity: 0, x: 50 },
+        { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }
+      );
+      scrollToPlayerCard(); // Scroll to the player card on selection
     }
 
     return {
@@ -243,119 +349,195 @@ export default {
       myRank,
       scrollToMyRank,
       isEventLive,
-      entryDetails
+      entryDetails,
+      toggleRanking,
+      topThreePlayers,
+      scrollCarousel,
+      carouselTrack
     };
   },
 };
 </script>
 
+
 <style scoped lang="scss">
 @import "@/assets/styles/global.scss";
 
-// Completely remove all browser/app margins and paddings
+/* Root and HTML/Body Resets (Crucial for consistency from leaderboard.html) */
+/* These are now primarily controlled by leaderboard.html, but keep them for reference/scoped overrides */
 html,
 body,
 #app {
-  width: 100vw !important;
-  min-width: 100vw !important;
-  height: 100vh !important;
-  min-height: 100vh !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  background: $bg-dark !important;
-  box-sizing: border-box !important;
-  overflow-x: hidden !important;
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  min-height: 100vh;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  background: $bg-dark;
 }
 
+#app {
+  display: flex;
+  /* Inherit from #leaderboard in HTML if possible */
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* Main Leaderboard Container */
 .leaderboard {
-  min-height: 100vh;
-  min-width: 100vw;
   width: 100vw;
-  height: 100vh;
-  background: $bg-dark-alt;
+  /* Explicitly full viewport width */
+  min-height: 100vh;
+  background: $bg-dark;
+  color: $cream;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow-x: hidden;
-}
-
-// Center LeaderBoard text (heading), animate in (via GSAP) and restyle for modern look
-h1 {
-  color: #fff;
-  font-family: 'Esporte', serif;
-  font-size: clamp(2.3rem, 5vw, 4.2rem);
-  font-weight: 900;
-  text-align: center;
-  margin: 0;
-  padding: 2.2rem 0 1.1rem 0;
-  letter-spacing: 2.5px;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.27);
-  filter: drop-shadow(0 12px 30px $brown30);
-  user-select: none;
-}
-
-// User info panel, white text, softened dark bg
-.user-info {
-  background: rgba(26, 26, 26, 0.89);
-  border-radius: 14px;
-  padding: 1.2rem 2.1rem 1.2rem 2.1rem;
-  margin: 0 auto 2.2rem auto;
-  color: white;
-  font-family: 'Integral-CF', sans-serif;
-  font-size: 1.05rem;
-  width: 97vw;
-  max-width: 850px;
-  box-shadow: 0 6px 40px $brown30;
-  border: 1px solid $brown30;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 1.2rem;
-  position: relative;
-  z-index: 1;
-}
-
-.user-info img {
-  height: 52px;
-  width: 52px;
-  border-radius: 50%;
-  border: 2px solid $cream20;
-  background: $brown;
-  object-fit: cover;
-  box-shadow: 0 0 14px $brown30;
-  margin-right: 18px;
-}
-
-// Toggle buttons
-.toggle-buttons {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  /* Ensure no internal horizontal scroll */
+  box-sizing: border-box;
+}
+
+/* Navigation Bar (Full Width) - Assumes Navbar component has a 'navbar' class */
+.leaderboard>.navbar {
+  width: 100vw;
+  /* Spans full viewport width */
+  margin-bottom: 2rem;
+  padding: 0.5rem 2rem;
+  box-sizing: border-box;
+}
+
+/* Global H1 (LeaderBoard Text) */
+h1 {
+  font-family: 'Esporte', serif;
+  color: $orange;
+  font-size: 3.5rem;
+  margin-bottom: 2.5rem;
+  text-align: center;
+  width: 100%;
+  /* Take full width of parent .leaderboard */
+  max-width: 1200px;
+  /* Aligns with other main content */
+  padding: 1rem 3rem;
+  /* Add horizontal padding directly */
+  box-sizing: border-box;
+}
+
+/* User Info Card */
+.user-info {
+  background: $light-brown10;
+  border-radius: 12px;
+  padding: 2rem 3rem;
+  margin-bottom: 3rem;
+  color: $cream;
+  font-family: 'Integral-CF-Regular', sans-serif;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid $brown30;
+  width: 100%;
+  /* Take full width of parent .leaderboard */
+  max-width: 900px;
+  /* Keep consistent max-width */
+  box-sizing: border-box;
+}
+
+.user-info p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.welcome-text {
+  font-family: 'Integral-CF-Bold', sans-serif;
+  font-size: 1.3rem;
+  color: $orange;
+}
+
+.user-photo {
+  height: 80px;
+  width: 80px;
+  border-radius: 50%;
+  border: 3px solid $orange;
+  margin: 1rem 0;
+  background: $dark-red;
+  object-fit: cover;
+  box-shadow: 0 0 15px rgba(241, 82, 41, 0.6);
+}
+
+.email-text {
+  color: $cream90;
+  font-size: 0.95rem;
+}
+
+
+/* Main Leaderboard Content Section (Table, buttons, side panel, top players) */
+#leaderboard-content {
+  width: 100%;
+  /* Takes full width of parent (.leaderboard) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 3rem;
+  /* Space at the very bottom */
+}
+
+
+/* --- Button & Table Layout Containers --- */
+/* Add specific wrappers for elements that need to fill max-width but maintain internal padding */
+.toggle-buttons-section,
+/* Renamed wrapper */
+.table-section,
+/* Renamed wrapper */
+.actions.bottom-actions,
+#info-side-panel-section,
+/* Renamed wrapper */
+.top-players-section {
+  width: 100%;
+  max-width: 1200px;
+  /* Consistently align content horizontally */
+  padding: 0 3rem;
+  /* Add horizontal padding to these wrappers */
+  box-sizing: border-box;
+  margin-bottom: 3rem;
+  /* Consistent spacing between major sections */
+}
+
+/* Adjust margin-bottom for last element if needed */
+.top-players-section {
+  margin-bottom: 0;
+  /* Remove margin from last section before event-not-started */
+}
+
+
+/* Toggle Buttons (Player/Team Rankings) */
+.toggle-buttons {
+  margin-bottom: 0;
+  /* Wrapper handles margin now */
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  width: 100%;
+  /* Fills its wrapper */
 }
 
 .toggle-buttons button {
-  font-size: 1.03rem;
-  padding: 0.48rem 2.1rem;
-  border-radius: 18px;
-  background: $bg-dark;
-  color: white;
+  font-family: 'Integral-CF-Bold', sans-serif;
+  font-size: 1.2rem;
+  padding: 0.8rem 2.5rem;
+  border-radius: 30px;
+  background: $bg-dark-alt;
+  color: $cream;
   border: 2px solid $orange;
   cursor: pointer;
-  font-family: 'Integral-CF', 'Esporte', serif;
-  font-weight: 700;
-  margin: 0;
-  transition:
-    background 0.21s cubic-bezier(.4, 1.1, .45, 1),
-    color 0.18s cubic-bezier(.4, 1.1, .45, 1),
-    border 0.19s cubic-bezier(.4, 1.1, .45, 1),
-    box-shadow 0.19s cubic-bezier(.4, 1.1, .45, 1);
-  box-shadow: 0 1px 5px $brown30;
-  letter-spacing: 1px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
 }
 
 .toggle-buttons button.active,
@@ -363,181 +545,628 @@ h1 {
   background: $orange;
   color: $bg-dark;
   border: 2px solid $cream;
-  box-shadow: 0 2px 14px $orange;
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 8px 15px rgba(241, 82, 41, 0.7);
 }
 
+/* Table Container */
 .table-container {
-  width: 100vw;
-  margin: 0;
-  padding: 0;
   overflow-x: auto;
-  display: flex;
-  justify-content: center;
+  width: 100%;
+  /* Fills its wrapper */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  border-radius: 15px;
+  background: $bg-dark-alt;
+  border: 1px solid $brown;
+  /* margin-bottom handled by wrapper */
 }
 
 table {
   border-collapse: collapse;
-  width: 97vw;
-  max-width: 1200px;
-  background: rgba(12, 12, 15, 0.99);
+  width: 100%;
+  min-width: 700px;
+  font-family: 'Integral-CF-Regular', sans-serif;
   color: $cream;
-  font-family: 'Integral-CF', serif;
-  border-radius: 10px;
-  box-shadow: 0 2px 32px $brown30, 0 10px 80px $brown30;
-  table-layout: auto;
-  font-size: 1.09rem;
-  margin: 0 auto;
+  border-radius: 15px;
+  overflow: hidden;
 }
 
-// Table head
 th,
 td {
-  padding: 1.03rem 0.82rem;
+  padding: 1.2rem 1.5rem;
   text-align: left;
-  border-bottom: 1px solid $brown30;
-  font-family: inherit;
-  color: #fff;
+  border-bottom: 1px solid $brown;
+  font-family: 'Integral-CF-Regular', sans-serif;
+  color: $cream;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-// Special thead
 th {
-  font-weight: 800;
+  font-family: 'Integral-CF-Bold', sans-serif;
+  font-weight: 700;
   color: $orange;
-  background: $brown30;
-  border-bottom: 2px solid $orange;
-  font-size: 1.13rem;
+  letter-spacing: 1.5px;
+  background: $brown;
+  border-bottom: 3px solid $dark-red;
 }
 
 tr.highlight {
   background: $red;
   color: $cream90;
-  font-weight: 700;
-  transition: background 0.23s;
+  font-family: 'Integral-CF-Bold', sans-serif;
+  animation: pulse-red 2s infinite alternate;
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 5px $red;
+  }
+
+  100% {
+    box-shadow: 0 0 20px $red;
+  }
 }
 
 tr:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: $brown30;
   cursor: pointer;
-  color: $cream;
+  transform: scale(1.005);
+  transition: all 0.2s ease-out;
 }
 
-// Table body bg color
-tbody tr {
-  background: transparent;
-  color: #fafcff;
-  transition: background 0.22s;
-}
-
-tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.012);
-}
-
-.actions {
-  margin: 1.35rem 0 0 0;
-  text-align: right;
-  width: 97vw;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-right: 0;
+/* Jump to My Rank Button (Bottom Actions) */
+.actions.bottom-actions {
+  /* margin-top and margin-bottom handled by wrapper */
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .actions button {
-  background: $red;
-  color: white;
-  border: none;
-  border-radius: 7px;
-  padding: 0.7rem 1.5rem;
-  font-size: 1.03rem;
-  font-family: 'Integral-CF', serif;
-  font-weight: 700;
+  background: $dark-red;
+  color: $cream;
+  border: 1px solid $red;
+  border-radius: 10px;
+  padding: 0.8rem 2rem;
+  font-size: 1.1rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease-in-out;
+  font-family: 'Integral-CF-Bold', sans-serif;
+  font-weight: bold;
   cursor: pointer;
-  transition: background 0.17s;
-  box-shadow: 0 0 5px $red;
-  letter-spacing: 0.7px;
+  white-space: nowrap;
 }
 
 .actions button:hover {
-  background: $dark-red;
-  color: $cream;
+  background: $red;
+  color: $cream90;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(196, 8, 23, 0.7);
 }
 
-// INFOPANEL with background image, blur, and GSAP fadein
-#info-side-panel {
-  margin: 2.1rem auto 0 auto;
-  min-height: 80px;
-  width: 97vw;
-  max-width: 1200px;
-  position: relative;
-  padding: 0;
-  z-index: 10;
+/* Info Side Panel (Player Card) */
+#info-side-panel-section {
+  /* Renamed ID to match template */
+  width: 100%;
 }
 
 .side-panel {
-  background: url('@/assets/images/logo.png'), linear-gradient(90deg, rgba(34, 34, 34, 0.92) 90%, rgba(52, 3, 7, 0.02) 100%);
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: right center;
-  border-left: 5px solid $orange;
-  padding: 2.3rem 1.8rem 2.3rem 2.4rem;
-  border-radius: 18px;
-  box-shadow: 0 6px 80px 10px $brown30;
-  color: #fff;
-  font-family: 'Integral-CF', serif;
-  font-size: 1.16rem;
-  width: 100%;
-  overflow: hidden;
-  backdrop-filter: blur(8.5px) brightness(1.04);
+  background: $bg-dark-alt;
+  border-left: 6px solid $orange;
+  padding: 2rem 2.5rem;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  color: $cream;
+  font-family: 'Integral-CF-Regular', sans-serif;
+  font-size: 1.05rem;
   position: relative;
-  z-index: 8889;
-  animation: showPanel 0.8s cubic-bezier(.6, 1.45, .6, .96);
+  overflow: hidden;
+  z-index: 1;
+  border: 1px solid $brown;
 }
 
-@keyframes showPanel {
-  from {
-    opacity: 0;
-    transform: translateY(32px) scale(0.96);
-  }
+.side-panel-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/public/assets/images/nebula-dark-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px) brightness(0.4);
+  transform: scale(1.1);
+  z-index: -1;
+}
 
-  to {
+.side-panel-title {
+  font-family: 'Esporte', serif;
+  color: $orange;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.side-panel-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.side-panel-list li {
+  margin-bottom: 0.8rem;
+  line-height: 1.6;
+  color: $cream80;
+}
+
+.side-panel-list li strong {
+  color: $orange;
+  font-family: 'Integral-CF-Bold', sans-serif;
+  margin-right: 0.5rem;
+}
+
+/* Event Not Started Message */
+.event-not-started {
+  width: 100%;
+  text-align: center;
+  padding: 5rem 0;
+  background: $bg-dark-alt;
+  border-radius: 15px;
+  margin-top: 3rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.event-message {
+  font-family: 'Electroharmonix', sans-serif;
+  color: $red;
+  font-size: 2rem;
+  text-shadow: 0 0 8px rgba(196, 8, 23, 0.8);
+  animation: flicker 1.5s infinite alternate;
+}
+
+@keyframes flicker {
+
+  0%,
+  100% {
     opacity: 1;
-    transform: none;
+    text-shadow: 0 0 8px rgba(196, 8, 23, 0.8);
+  }
+
+  50% {
+    opacity: 0.8;
+    text-shadow: 0 0 15px rgba(196, 8, 23, 0.8);
   }
 }
 
-// Make sure all cards and content are full-bleed on mobile
-@media (max-width: 900px) {
 
+/* --- Top Players Section (Carousel) --- */
+.top-players-section {
+  width: 100%;
+  /* Fills its wrapper */
+  /* margin-top and margin-bottom handled by wrapper */
+  text-align: center;
+}
+
+.section-title {
+  font-family: 'Esporte', serif;
+  color: $orange;
+  font-size: 2.8rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.top-players-carousel-wrapper {
+  /* New wrapper for carousel to control horizontal padding */
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  position: relative;
+  width: 100%;
+  /* Fills parent */
+  padding: 0 1rem;
+  /* Padding applied here for the entire carousel container */
+  box-sizing: border-box;
+}
+
+.carousel-track {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 2rem;
+  padding-bottom: 1rem;
+  flex-grow: 1;
+  width: 100%;
+  /* Fills its parent wrapper */
+  justify-content: center;
+  padding-left: 0;
+  /* No internal padding here, wrapper handles it */
+  padding-right: 0;
+  /* No internal padding here, wrapper handles it */
+}
+
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.top-player-card {
+  flex: 0 0 auto;
+  width: 300px;
+  height: 250px;
+  background: $bg-dark-alt;
+  border: 2px solid $brown;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: visible;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding-top: 50px;
+}
+
+.top-player-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 15px $orange;
+}
+
+
+.rank-overlay {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Electroharmonix', sans-serif;
+  font-size: 6rem;
+  color: $orange;
+  text-shadow: 0 0 20px $orange, 0 0 40px $orange;
+  z-index: 2;
+  opacity: 0.85;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Specific colors for top ranks */
+.top-player-card:nth-child(1) .rank-overlay {
+  color: gold;
+  text-shadow: 0 0 20px gold, 0 0 40px gold;
+}
+
+.top-player-card:nth-child(2) .rank-overlay {
+  color: silver;
+  text-shadow: 0 0 20px silver, 0 0 40px silver;
+}
+
+.top-player-card:nth-child(3) .rank-overlay {
+  color: #cd7f32;
+  text-shadow: 0 0 20px #cd7f32, 0 0 40px #cd7f32;
+}
+
+.card-content {
+  position: relative;
+  z-index: 3;
+}
+
+.player-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid $cream;
+  margin-bottom: 0.8rem;
+  box-shadow: 0 0 10px rgba(255, 209, 157, 0.5);
+}
+
+.player-name {
+  font-family: 'Integral-CF-Bold', sans-serif;
+  color: $cream;
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.player-points {
+  font-family: 'Integral-CF-Regular', sans-serif;
+  color: $orange;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+
+.carousel-nav-btn {
+  background: $dark-red;
+  color: $cream;
+  border: 1px solid $red;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease-in-out;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.carousel-nav-btn:hover {
+  background: $red;
+  color: $cream90;
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(196, 8, 23, 0.7);
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+
+  h1,
   .user-info,
-  table,
-  .actions,
-  #info-side-panel,
-  .side-panel {
-    width: 99vw !important;
-    max-width: 99vw !important;
-    border-radius: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 6vw !important;
-    padding-right: 4vw !important;
+  .toggle-buttons-section,
+  .table-section,
+  .actions.bottom-actions,
+  #info-side-panel-section,
+  .top-players-section {
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 
-  h1 {
-    padding-left: 0;
-    padding-right: 0;
-    font-size: 2rem;
+  .user-info {
+    width: calc(100% - 4rem);
   }
 }
 
-// universal: No horizontal or vertical scroll
-body,
-html,
-#app,
-.leaderboard {
-  overflow-x: hidden !important;
-  overflow-y: auto;
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 3rem;
+  }
+
+  h1,
+  .user-info,
+  .toggle-buttons-section,
+  .table-section,
+  .actions.bottom-actions,
+  #info-side-panel-section,
+  .top-players-section {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .user-info {
+    padding: 1.5rem 2rem;
+    margin-bottom: 2.5rem;
+    width: calc(100% - 3rem);
+  }
+
+  .user-photo {
+    height: 60px;
+    width: 60px;
+  }
+
+  .welcome-text {
+    font-size: 1.2rem;
+  }
+
+  .email-text {
+    font-size: 0.85rem;
+  }
+
+  .toggle-buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .toggle-buttons button {
+    font-size: 1.1rem;
+    padding: 0.6rem 2rem;
+    width: 90%;
+    max-width: 300px;
+  }
+
+  th,
+  td {
+    padding: 1rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .actions button {
+    padding: 0.7rem 1.8rem;
+    font-size: 1rem;
+  }
+
+  .side-panel {
+    padding: 1.5rem 1.8rem;
+    font-size: 0.95rem;
+  }
+
+  .side-panel-title {
+    font-size: 1.8rem;
+  }
+
+  .event-message {
+    font-size: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 2.2rem;
+  }
+
+  .top-players-carousel-wrapper {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+  }
+
+  .carousel-nav-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+
+  .carousel-track {
+    width: calc(100% - 100px);
+    gap: 1rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    scroll-snap-align: start;
+  }
+
+  .top-player-card {
+    width: 250px;
+    height: 220px;
+    padding-top: 40px;
+  }
+
+  .rank-overlay {
+    font-size: 5rem;
+    top: -25px;
+  }
+
+  .player-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .player-name {
+    font-size: 1.3rem;
+  }
+
+  .player-points {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h1,
+  .user-info,
+  .toggle-buttons-section,
+  .table-section,
+  .actions.bottom-actions,
+  #info-side-panel-section,
+  .top-players-section {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .user-info {
+    padding: 1rem 1.5rem;
+    width: calc(100% - 2rem);
+  }
+
+  .user-photo {
+    height: 50px;
+    width: 50px;
+  }
+
+  .toggle-buttons {
+    gap: 0.8rem;
+  }
+
+  .toggle-buttons button {
+    font-size: 1rem;
+    padding: 0.5rem 1.5rem;
+    width: 95%;
+  }
+
+  th,
+  td {
+    padding: 0.8rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .table-container {
+    min-width: unset;
+  }
+
+  .actions button {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .side-panel {
+    padding: 1.2rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .side-panel-title {
+    font-size: 1.5rem;
+  }
+
+  .event-message {
+    font-size: 1.2rem;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .top-players-carousel-wrapper {
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 0;
+  }
+
+  .carousel-nav-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .carousel-track {
+    width: 100%;
+    gap: 0.8rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .top-player-card {
+    width: 180px;
+    height: 180px;
+    padding-top: 25px;
+  }
+
+  .rank-overlay {
+    font-size: 3.5rem;
+    top: -15px;
+  }
+
+  .player-avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .player-name {
+    font-size: 1.1rem;
+  }
+
+  .player-points {
+    font-size: 0.9rem;
+  }
 }
 </style>
