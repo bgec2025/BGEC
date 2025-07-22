@@ -499,19 +499,14 @@ h1 {
 /* Renamed wrapper */
 .top-players-section {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1600px;
+  text-align: center;
   /* Consistently align content horizontally */
-  padding: 0 3rem;
+  padding: 2rem 3rem;
   /* Add horizontal padding to these wrappers */
   box-sizing: border-box;
   margin-bottom: 3rem;
   /* Consistent spacing between major sections */
-}
-
-/* Adjust margin-bottom for last element if needed */
-.top-players-section {
-  margin-bottom: 0;
-  /* Remove margin from last section before event-not-started */
 }
 
 
@@ -745,15 +740,6 @@ tr:hover {
   }
 }
 
-
-/* --- Top Players Section (Carousel) --- */
-.top-players-section {
-  width: 100%;
-  /* Fills its wrapper */
-  /* margin-top and margin-bottom handled by wrapper */
-  text-align: center;
-}
-
 .section-title {
   font-family: 'Esporte', serif;
   color: $orange;
@@ -800,8 +786,8 @@ tr:hover {
 
 .top-player-card {
   flex: 0 0 auto;
-  width: 300px;
-  height: 250px;
+  width: 90%;
+  height: 300px;
   background: $bg-dark-alt;
   border: 2px solid $brown;
   border-radius: 15px;
@@ -814,6 +800,7 @@ tr:hover {
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  margin: 3rem;
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   padding-top: 50px;
@@ -917,7 +904,7 @@ tr:hover {
 
 
 /* Responsive adjustments */
-@media (max-width: 1200px) {
+@media (max-width: 1600px) {
 
   h1,
   .user-info,
