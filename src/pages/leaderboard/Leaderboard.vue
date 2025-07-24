@@ -3,11 +3,13 @@
     <NavigationBar />
     <h1>LeaderBoard</h1>
 
+
     <div v-if="userInfo" class="user-info">
       <p class="welcome-text">Welcome, {{ userInfo.displayName }}</p>
       <img :src="userInfo.photoURL" alt="User Photo" referrerpolicy="no-referrer" class="user-photo" />
       <p class="email-text">Email: {{ userInfo.email }}</p>
     </div>
+
 
     <section v-if="isEventLive" id="leaderboard-content">
       <div class="toggle-buttons-section">
@@ -16,6 +18,7 @@
           <button :class="{ active: showTeams }" @click="toggleRanking(true)">Team Rankings</button>
         </div>
       </div>
+
 
       <div class="table-section">
         <div class="table-container">
@@ -41,17 +44,20 @@
         </div>
       </div>
 
+
       <div class="actions bottom-actions">
         <button v-if="myRank !== null" @click="scrollToMyRank">
           Jump to My Rank
         </button>
       </div>
 
+
       <div id="info-side-panel-section">
         <div v-if="selectedEntry" class="side-panel">
           <div class="side-panel-bg"></div>
           <h3 class="side-panel-title">Details for {{ showTeams ? selectedEntry.teamName : selectedEntry.userName ||
             selectedEntry.displayName || selectedEntry.gameName }}</h3>
+
 
           <ul class="side-panel-list">
             <li v-for="item in entryDetails" :key="item.key">
@@ -61,8 +67,9 @@
         </div>
       </div>
 
+
       <section class="top-players-section" v-if="isEventLive && topThreePlayers.length > 0">
-        <h2 class="section-title">Top Players</h2>
+        <h2 class="section-title">{{ topSectionTitle }}</h2>
         <div class="top-players-carousel-wrapper">
           <button @click="scrollCarousel('left')" class="carousel-nav-btn left-arrow">◀</button>
           <div class="carousel-track" ref="carouselTrack">
@@ -71,7 +78,8 @@
               <div class="card-content">
                 <img :src="player.photoURL || '/public/assets/images/default-avatar.png'" alt="Player Avatar"
                   class="player-avatar" />
-                <h4 class="player-name">{{ player.gameName || player.displayName || player.userName }}</h4>
+                <h4 class="player-name">{{ showTeams ? player.teamName : (player.gameName || player.displayName ||
+                  player.userName) }}</h4>
                 <p class="player-points">{{ player.totalPoints.toFixed(2) }} Points</p>
               </div>
             </div>
@@ -87,6 +95,7 @@
 </template>
 
 
+
 <script>
 import { ref, onMounted, watch, nextTick, computed } from 'vue';
 import { getFirestore, collection, query, orderBy, getDocs, getDoc, doc } from 'firebase/firestore';
@@ -94,6 +103,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import firebaseApp from '../../firebase';
 import NavigationBar from '@/components/NavigationBar.vue';
 import { gsap } from 'gsap';
+
 
 
 const FIELD_LABELS = {
@@ -114,6 +124,7 @@ const FIELD_LABELS = {
 };
 
 
+
 const INFO_DISPLAY_ORDER = [
   'id',
   'teamName', 'gameName', 'displayName', 'userName',
@@ -125,8 +136,10 @@ const INFO_DISPLAY_ORDER = [
   'normalizedKills',
 ];
 
+
 let audioContext;
 let clickSoundBuffer;
+
 
 async function loadClickSound() {
   if (!audioContext) { // eslint-disable-next-line
@@ -143,6 +156,7 @@ async function loadClickSound() {
   }
 }
 
+
 function playClickSound() {
   if (clickSoundBuffer && audioContext) {
     const source = audioContext.createBufferSource();
@@ -152,6 +166,7 @@ function playClickSound() {
   }
 }
 
+
 export default {
   name: 'LeaderboardPage',
   components: { NavigationBar },
@@ -159,12 +174,14 @@ export default {
     const db = getFirestore(firebaseApp.app);
     const auth = getAuth(firebaseApp.app);
 
+
     const showTeams = ref(false);
     const leaderboard = ref([]);
     const userInfo = ref(null);
     const selectedEntry = ref(null);
     const currentUserId = ref(null);
     const isEventLive = ref(false);
+
 
     onMounted(async () => {
       onAuthStateChanged(auth, (user) => {
@@ -182,6 +199,7 @@ export default {
         }
       });
 
+
       const eventDataRef = doc(db, "events", "currentEvent");
       const eventDoc = await getDoc(eventDataRef);
       if (eventDoc.exists()) {
@@ -190,10 +208,13 @@ export default {
         isEventLive.value = false;
       }
 
+
       await loadClickSound();
+
 
       // Animate the heading
       gsap.from("h1", { opacity: 0, y: -30, duration: 1, ease: "power3.out" });
+
 
       // Animate user info (only if present)
       nextTick(() => {// eslint-disable-next-line
@@ -235,18 +256,26 @@ export default {
       });
     });
 
+
     async function fetchLeaderboard() {
       const colName = showTeams.value ? 'teamRanking' : 'playerRanking';
       const q = query(collection(db, colName), orderBy('totalPoints', 'desc'));
       const snapshot = await getDocs(q);
       leaderboard.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+
+      console.log("Leaderboard after fetch:", leaderboard.value); // Add this
+      console.log("Top Three Players computed value:", topThreePlayers.value); // And this
+
+
       await nextTick();
       gsap.from("tbody tr", { opacity: 0, x: -20, duration: 0.5, stagger: 0.05, ease: "power2.out" });
     }
 
+
     onMounted(fetchLeaderboard);
     watch(showTeams, fetchLeaderboard);
+
 
     const myOwnEntryId = computed(() => {
       if (!userInfo.value || leaderboard.value.length === 0) return null;
@@ -268,11 +297,13 @@ export default {
       }
     });
 
+
     const myRank = computed(() => {
       if (!myOwnEntryId.value) return null;
       const idx = leaderboard.value.findIndex(entry => entry.id === myOwnEntryId.value);
       return idx !== -1 ? idx + 1 : null;
     });
+
 
     const entryDetails = computed(() => {
       if (!selectedEntry.value) return [];
@@ -289,9 +320,17 @@ export default {
         .filter(Boolean);
     });
 
+
     const topThreePlayers = computed(() => {
       return leaderboard.value.slice(0, 3);
     });
+
+
+    // MODIFICATION 3: Added computed property for the section title
+    const topSectionTitle = computed(() => {
+      return showTeams.value ? 'Top Teams' : 'Top Players';
+    });
+
 
     const carouselTrack = ref(null);
     const scrollCarousel = (direction) => {
@@ -305,6 +344,7 @@ export default {
     };
 
 
+
     async function scrollToMyRank() {
       playClickSound();
       if (!myOwnEntryId.value) return;
@@ -316,6 +356,7 @@ export default {
       }
     }
 
+
     // New: Scroll to player card function
     function scrollToPlayerCard() {// eslint-disable-next-line
       const panel = document.getElementById('info-side-panel-section'); // Target the new section wrapper ID
@@ -324,10 +365,12 @@ export default {
       }
     }
 
+
     function toggleRanking(isTeam) {
       playClickSound();
       showTeams.value = isTeam;
     }
+
 
     function selectEntry(entry) {
       playClickSound();
@@ -338,6 +381,7 @@ export default {
       );
       scrollToPlayerCard(); // Scroll to the player card on selection
     }
+
 
     return {
       showTeams,
@@ -353,15 +397,18 @@ export default {
       toggleRanking,
       topThreePlayers,
       scrollCarousel,
-      carouselTrack
+      carouselTrack,
+      topSectionTitle // <-- Make sure to return the new property
     };
   },
 };
 </script>
 
 
+
 <style scoped lang="scss">
 @import "@/assets/styles/global.scss";
+
 
 /* Root and HTML/Body Resets (Crucial for consistency from leaderboard.html) */
 /* These are now primarily controlled by leaderboard.html, but keep them for reference/scoped overrides */
@@ -377,12 +424,14 @@ body,
   background: $bg-dark;
 }
 
+
 #app {
   display: flex;
   /* Inherit from #leaderboard in HTML if possible */
   flex-direction: column;
   align-items: center;
 }
+
 
 
 /* Main Leaderboard Container */
@@ -402,6 +451,7 @@ body,
   box-sizing: border-box;
 }
 
+
 /* Navigation Bar (Full Width) - Assumes Navbar component has a 'navbar' class */
 .leaderboard>.navbar {
   width: 100vw;
@@ -410,6 +460,7 @@ body,
   padding: 0.5rem 2rem;
   box-sizing: border-box;
 }
+
 
 /* Global H1 (LeaderBoard Text) */
 h1 {
@@ -426,6 +477,7 @@ h1 {
   /* Add horizontal padding directly */
   box-sizing: border-box;
 }
+
 
 /* User Info Card */
 .user-info {
@@ -448,16 +500,19 @@ h1 {
   box-sizing: border-box;
 }
 
+
 .user-info p {
   margin: 0.5rem 0;
   font-size: 1.1rem;
 }
+
 
 .welcome-text {
   font-family: 'Integral-CF-Bold', sans-serif;
   font-size: 1.3rem;
   color: $orange;
 }
+
 
 .user-photo {
   height: 80px;
@@ -470,10 +525,12 @@ h1 {
   box-shadow: 0 0 15px rgba(241, 82, 41, 0.6);
 }
 
+
 .email-text {
   color: $cream90;
   font-size: 0.95rem;
 }
+
 
 
 /* Main Leaderboard Content Section (Table, buttons, side panel, top players) */
@@ -486,6 +543,7 @@ h1 {
   margin-bottom: 3rem;
   /* Space at the very bottom */
 }
+
 
 
 /* --- Button & Table Layout Containers --- */
@@ -510,6 +568,7 @@ h1 {
 }
 
 
+
 /* Toggle Buttons (Player/Team Rankings) */
 .toggle-buttons {
   margin-bottom: 0;
@@ -520,6 +579,7 @@ h1 {
   width: 100%;
   /* Fills its wrapper */
 }
+
 
 .toggle-buttons button {
   font-family: 'Integral-CF-Bold', sans-serif;
@@ -535,6 +595,7 @@ h1 {
   white-space: nowrap;
 }
 
+
 .toggle-buttons button.active,
 .toggle-buttons button:hover {
   background: $orange;
@@ -543,6 +604,7 @@ h1 {
   transform: translateY(-5px) scale(1.05);
   box-shadow: 0 8px 15px rgba(241, 82, 41, 0.7);
 }
+
 
 /* Table Container */
 .table-container {
@@ -556,6 +618,7 @@ h1 {
   /* margin-bottom handled by wrapper */
 }
 
+
 table {
   border-collapse: collapse;
   width: 100%;
@@ -565,6 +628,7 @@ table {
   border-radius: 15px;
   overflow: hidden;
 }
+
 
 th,
 td {
@@ -578,6 +642,7 @@ td {
   text-overflow: ellipsis;
 }
 
+
 th {
   font-family: 'Integral-CF-Bold', sans-serif;
   font-weight: 700;
@@ -587,6 +652,7 @@ th {
   border-bottom: 3px solid $dark-red;
 }
 
+
 tr.highlight {
   background: $red;
   color: $cream90;
@@ -594,15 +660,18 @@ tr.highlight {
   animation: pulse-red 2s infinite alternate;
 }
 
+
 @keyframes pulse-red {
   0% {
     box-shadow: 0 0 5px $red;
   }
 
+
   100% {
     box-shadow: 0 0 20px $red;
   }
 }
+
 
 tr:hover {
   background: $brown30;
@@ -610,6 +679,7 @@ tr:hover {
   transform: scale(1.005);
   transition: all 0.2s ease-out;
 }
+
 
 /* Jump to My Rank Button (Bottom Actions) */
 .actions.bottom-actions {
@@ -619,6 +689,7 @@ tr:hover {
   justify-content: center;
   width: 100%;
 }
+
 
 .actions button {
   background: $dark-red;
@@ -635,6 +706,7 @@ tr:hover {
   white-space: nowrap;
 }
 
+
 .actions button:hover {
   background: $red;
   color: $cream90;
@@ -642,11 +714,13 @@ tr:hover {
   box-shadow: 0 8px 20px rgba(196, 8, 23, 0.7);
 }
 
+
 /* Info Side Panel (Player Card) */
 #info-side-panel-section {
   /* Renamed ID to match template */
   width: 100%;
 }
+
 
 .side-panel {
   background: $bg-dark-alt;
@@ -663,6 +737,7 @@ tr:hover {
   border: 1px solid $brown;
 }
 
+
 .side-panel-bg {
   position: absolute;
   top: 0;
@@ -677,6 +752,7 @@ tr:hover {
   z-index: -1;
 }
 
+
 .side-panel-title {
   font-family: 'Esporte', serif;
   color: $orange;
@@ -687,6 +763,7 @@ tr:hover {
   z-index: 2;
 }
 
+
 .side-panel-list {
   list-style: none;
   padding: 0;
@@ -695,17 +772,20 @@ tr:hover {
   z-index: 2;
 }
 
+
 .side-panel-list li {
   margin-bottom: 0.8rem;
   line-height: 1.6;
   color: $cream80;
 }
 
+
 .side-panel-list li strong {
   color: $orange;
   font-family: 'Integral-CF-Bold', sans-serif;
   margin-right: 0.5rem;
 }
+
 
 /* Event Not Started Message */
 .event-not-started {
@@ -718,6 +798,7 @@ tr:hover {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
+
 .event-message {
   font-family: 'Electroharmonix', sans-serif;
   color: $red;
@@ -726,7 +807,9 @@ tr:hover {
   animation: flicker 1.5s infinite alternate;
 }
 
+
 @keyframes flicker {
+
 
   0%,
   100% {
@@ -734,11 +817,13 @@ tr:hover {
     text-shadow: 0 0 8px rgba(196, 8, 23, 0.8);
   }
 
+
   50% {
     opacity: 0.8;
     text-shadow: 0 0 15px rgba(196, 8, 23, 0.8);
   }
 }
+
 
 .section-title {
   font-family: 'Esporte', serif;
@@ -747,6 +832,7 @@ tr:hover {
   margin-bottom: 2rem;
   text-align: center;
 }
+
 
 .top-players-carousel-wrapper {
   /* New wrapper for carousel to control horizontal padding */
@@ -761,6 +847,7 @@ tr:hover {
   box-sizing: border-box;
 }
 
+
 .carousel-track {
   display: flex;
   overflow-x: scroll;
@@ -768,26 +855,27 @@ tr:hover {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  gap: 2rem;
+  gap: 2rem; /* Keep this gap */
   padding-bottom: 1rem;
   flex-grow: 1;
   width: 100%;
-  /* Fills its parent wrapper */
-  justify-content: center;
+  // justify-content: center;
+  /* Remove any padding-left/right here, it's handled by carousel-carousel-wrapper */
   padding-left: 0;
-  /* No internal padding here, wrapper handles it */
   padding-right: 0;
-  /* No internal padding here, wrapper handles it */
 }
+
+
 
 .carousel-track::-webkit-scrollbar {
   display: none;
 }
-
 .top-player-card {
   flex: 0 0 auto;
-  width: 90%;
-  height: 300px;
+  /* IMPORTANT: Set a fixed width here for all screen sizes, unless overridden by media queries */
+  width: 90%; /* Or whatever your desired default card width is */
+  margin: 3rem;
+  height: 300px; /* Keep consistent height */
   background: $bg-dark-alt;
   border: 2px solid $brown;
   border-radius: 15px;
@@ -800,16 +888,19 @@ tr:hover {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  margin: 3rem;
+  /* Remove or significantly reduce margin here. Gap on carousel-track will handle spacing. */
+   /* Set to 0, or a very small value like 0 0.5rem if you want slight internal card margin */
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   padding-top: 50px;
 }
 
+
 .top-player-card:hover {
   transform: translateY(-5px) scale(1.02);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 15px $orange;
 }
+
 
 
 .rank-overlay {
@@ -827,26 +918,31 @@ tr:hover {
   line-height: 1;
 }
 
+
 /* Specific colors for top ranks */
 .top-player-card:nth-child(1) .rank-overlay {
   color: gold;
   text-shadow: 0 0 20px gold, 0 0 40px gold;
 }
 
+
 .top-player-card:nth-child(2) .rank-overlay {
   color: silver;
   text-shadow: 0 0 20px silver, 0 0 40px silver;
 }
+
 
 .top-player-card:nth-child(3) .rank-overlay {
   color: #cd7f32;
   text-shadow: 0 0 20px #cd7f32, 0 0 40px #cd7f32;
 }
 
+
 .card-content {
   position: relative;
   z-index: 3;
 }
+
 
 .player-avatar {
   width: 100px;
@@ -857,6 +953,7 @@ tr:hover {
   margin-bottom: 0.8rem;
   box-shadow: 0 0 10px rgba(255, 209, 157, 0.5);
 }
+
 
 .player-name {
   font-family: 'Integral-CF-Bold', sans-serif;
@@ -869,12 +966,14 @@ tr:hover {
   max-width: 100%;
 }
 
+
 .player-points {
   font-family: 'Integral-CF-Regular', sans-serif;
   color: $orange;
   font-size: 1.2rem;
   font-weight: bold;
 }
+
 
 
 .carousel-nav-btn {
@@ -895,6 +994,7 @@ tr:hover {
   z-index: 5;
 }
 
+
 .carousel-nav-btn:hover {
   background: $red;
   color: $cream90;
@@ -903,8 +1003,10 @@ tr:hover {
 }
 
 
+
 /* Responsive adjustments */
 @media (max-width: 1600px) {
+
 
   h1,
   .user-info,
@@ -917,16 +1019,19 @@ tr:hover {
     padding-right: 2rem;
   }
 
+
   .user-info {
     width: calc(100% - 4rem);
   }
 }
 
 
+
 @media (max-width: 768px) {
   h1 {
     font-size: 3rem;
   }
+
 
   h1,
   .user-info,
@@ -939,29 +1044,35 @@ tr:hover {
     padding-right: 1.5rem;
   }
 
+
   .user-info {
     padding: 1.5rem 2rem;
     margin-bottom: 2.5rem;
     width: calc(100% - 3rem);
   }
 
+
   .user-photo {
     height: 60px;
     width: 60px;
   }
 
+
   .welcome-text {
     font-size: 1.2rem;
   }
+
 
   .email-text {
     font-size: 0.85rem;
   }
 
+
   .toggle-buttons {
     flex-direction: column;
     gap: 1rem;
   }
+
 
   .toggle-buttons button {
     font-size: 1.1rem;
@@ -970,46 +1081,54 @@ tr:hover {
     max-width: 300px;
   }
 
+
   th,
   td {
     padding: 1rem 1rem;
     font-size: 0.9rem;
   }
 
+
   .actions button {
     padding: 0.7rem 1.8rem;
     font-size: 1rem;
   }
+
 
   .side-panel {
     padding: 1.5rem 1.8rem;
     font-size: 0.95rem;
   }
 
+
   .side-panel-title {
     font-size: 1.8rem;
   }
+
 
   .event-message {
     font-size: 1.5rem;
   }
 
+
   .section-title {
     font-size: 2.2rem;
   }
+
 
   .top-players-carousel-wrapper {
     flex-direction: row;
     justify-content: space-between;
     gap: 0.5rem;
-    padding: 0 0.5rem;
   }
+
 
   .carousel-nav-btn {
     width: 40px;
     height: 40px;
     font-size: 1.2rem;
   }
+
 
   .carousel-track {
     width: calc(100% - 100px);
@@ -1019,35 +1138,36 @@ tr:hover {
     scroll-snap-align: start;
   }
 
-  .top-player-card {
-    width: 250px;
-    height: 220px;
-    padding-top: 40px;
-  }
 
+  
   .rank-overlay {
     font-size: 5rem;
     top: -25px;
   }
+
 
   .player-avatar {
     width: 80px;
     height: 80px;
   }
 
+
   .player-name {
     font-size: 1.3rem;
   }
+
 
   .player-points {
     font-size: 1.1rem;
   }
 }
 
+
 @media (max-width: 480px) {
   h1 {
     font-size: 2.5rem;
   }
+
 
   h1,
   .user-info,
@@ -1060,19 +1180,23 @@ tr:hover {
     padding-right: 1rem;
   }
 
+
   .user-info {
     padding: 1rem 1.5rem;
     width: calc(100% - 2rem);
   }
+
 
   .user-photo {
     height: 50px;
     width: 50px;
   }
 
+
   .toggle-buttons {
     gap: 0.8rem;
   }
+
 
   .toggle-buttons button {
     font-size: 1rem;
@@ -1080,38 +1204,46 @@ tr:hover {
     width: 95%;
   }
 
+
   th,
   td {
     padding: 0.8rem 0.8rem;
     font-size: 0.8rem;
   }
 
+
   .table-container {
     min-width: unset;
   }
+
 
   .actions button {
     padding: 0.6rem 1.5rem;
     font-size: 0.9rem;
   }
 
+
   .side-panel {
     padding: 1.2rem 1.5rem;
     font-size: 0.9rem;
   }
 
+
   .side-panel-title {
     font-size: 1.5rem;
   }
+
 
   .event-message {
     font-size: 1.2rem;
   }
 
+
   .section-title {
     font-size: 2rem;
     margin-bottom: 1.5rem;
   }
+
 
   .top-players-carousel-wrapper {
     flex-direction: column;
@@ -1119,38 +1251,33 @@ tr:hover {
     padding: 0;
   }
 
+
   .carousel-nav-btn {
     width: 35px;
     height: 35px;
     font-size: 1rem;
   }
 
-  .carousel-track {
-    width: 100%;
-    gap: 0.8rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
 
-  .top-player-card {
-    width: 180px;
-    height: 180px;
-    padding-top: 25px;
-  }
+  
+
 
   .rank-overlay {
     font-size: 3.5rem;
     top: -15px;
   }
 
+
   .player-avatar {
     width: 60px;
     height: 60px;
   }
 
+
   .player-name {
     font-size: 1.1rem;
   }
+
 
   .player-points {
     font-size: 0.9rem;
