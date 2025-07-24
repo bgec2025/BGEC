@@ -3,7 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>WreckHavoc Leaderboard</title>
+    <style>
+        /* Essential Global Resets - Apply these directly here for highest priority */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw; /* Ensure full viewport width */
+            min-height: 100vh; /* Ensure full viewport height */
+            overflow-x: hidden; /* Prevent horizontal scroll for the entire page */
+            box-sizing: border-box; /* Crucial for consistent box model */
+            /* You might want to define your $bg-dark here directly too if not done via a pre-compiled CSS */
+            background-color: #0F0F0F; /* Fallback/initial background color */
+            scroll-behavior: smooth; /* Smooth scrolling for anchors/JS scrolls */
+        }
+        /* The #leaderboard div is where your Vue app mounts */
+        #leaderboard {
+            width: 100vw;
+            min-height: 100vh;
+            display: flex; /* Helps ensure it takes full height and acts as a flex container */
+            flex-direction: column; /* Stack content vertically */
+            align-items: center; /* Center content horizontally within it */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Prevent horizontal scroll within the app container */
+            box-sizing: border-box;
+        }
+
+        /* Specific styles for elements rendered by main.js directly into #leaderboard */
+        /* If NavigationBar doesn't span 100vw, ensure its internal styling or its parent's styling forces it */
+    </style>
 </head>
 <body>
     <div id="leaderboard"></div>

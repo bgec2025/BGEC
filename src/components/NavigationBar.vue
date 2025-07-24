@@ -58,7 +58,7 @@ export default {
   font-size: 1.8rem;
   font-weight: bold;
   letter-spacing: 2px;
-  text-shadow: 0 0 8px #ff9900;
+  /* text-shadow: 0 0 8px #ff9900; */
 }
 
 .navbar-right {
