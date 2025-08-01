@@ -5,10 +5,22 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title><%= htmlWebpackPlugin.options.title %></title>
+     <style>
+        /* Essential Global Resets - Apply these directly here for highest priority */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw; /* Ensure full viewport width */
+            min-height: 100vh; /* Ensure full viewport height */
+            overflow-x: hidden; /* Prevent horizontal scroll for the entire page */
+            box-sizing: border-box; /* Crucial for consistent box model */
+            scroll-behavior: smooth; /* Smooth scrolling for anchors/JS scrolls */
+        }
+        </style>
   </head>
   <body>
     <div id="home"></div>
     <!-- built files will be auto injected -->
-     <script src="../src/pages/home/main.js" type="module"></script>
+    <!-- <script src="../src/pages/home/main.js" type="module"></script> -->
   </body>
 </html>

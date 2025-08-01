@@ -334,14 +334,22 @@ export default {
 
     const carouselTrack = ref(null);
     const scrollCarousel = (direction) => {
-      playClickSound();
-      if (carouselTrack.value) {
-        const cardWidth = 300; // Match the width of .top-player-card
-        const gapWidth = 32; // Match the gap: 2rem = 32px
-        const scrollAmount = cardWidth + gapWidth;
-        gsap.to(carouselTrack.value, { scrollLeft: carouselTrack.value.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount), duration: 0.5, ease: "power2.out" });
-      }
-    };
+    playClickSound();
+    if (carouselTrack.value) {
+      // Dynamically get the card width for all screen sizes
+      const card = carouselTrack.value.querySelector('.top-player-card');
+      const cardWidth = card ? card.offsetWidth : 300;
+      const gapWidth = 32;
+      const scrollAmount = cardWidth + gapWidth;
+      const el = carouselTrack.value;
+      const target = direction === 'left' ? el.scrollLeft - scrollAmount: el.scrollLeft + scrollAmount;
+
+      el.scrollTo({
+        left: target,
+        behavior: 'smooth'
+      });
+    }
+  };
 
 
 
@@ -449,6 +457,7 @@ body,
   overflow-x: hidden;
   /* Ensure no internal horizontal scroll */
   box-sizing: border-box;
+  margin-top: 3rem;
 }
 
 
