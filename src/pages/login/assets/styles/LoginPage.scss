@@ -1,414 +1,175 @@
-// Import global styles
-@import '../../../../assets/styles/global.scss';
+// COLORS & FONTS
+$accent: #16a085; // Slightly teal-green as in image
+$form-bg: rgba(16, 30, 21, 0.95);
+$white: #fff;
+$text-gray: #cbd0cc;
+
+@import url('https://fonts.googleapis.com/css?family=Montserrat:700,500,400&display=swap');
+* { font-family: 'Montserrat', Arial, sans-serif; }
 
 .login-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, $bg-dark 0%, $bg-dark-alt 100%);
-  font-family: 'Esporte', sans-serif;
-  overflow-x: hidden;
-  position: relative;
-}
-
-// Marquee Banner
-.marquee-banner {
-  background:radial-gradient(
-    ellipse at left center,
-    rgba(0, 0, 0, 0.95) 0%,
-    rgba(0, 0, 0, 0.7) 60%,
-    rgba(0, 0, 0, 0.2) 90%,
-    transparent 100%
-  );
-  height: 80px;
+  width: 100vw;
+  background: #13361e;
+  background: url('@/assets/images/login-bg-mandalorian.jpg') center center/cover no-repeat,  // swap to your actual bg!
+              linear-gradient(120deg, #13361e 30%, #203c29 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  position: relative;
-  z-index: 10;
-  backdrop-filter: blur(10px);
-  position: relative;
-  z-index: 3;
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
-  
-  // Overlap effect
-  margin-left: -50px;
-  
-  .marquee-content {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    white-space: nowrap;
-    
-    .brand-text {
-      font-family: 'Esporte', sans-serif;
-      font-size: 2.5rem;
-      color: $cream;
-      margin-right: 100px;
-      text-shadow: 0 0 20px rgba($dark-red, 0.6);
-      letter-spacing: 2px;
-      font-weight: bold;
-      
-      &:hover {
-        color: yellow;
-        text-shadow: 0 0 30px rgba($red, 0.8);
-      }
-    }
-  }
 }
 
-// Main Content Layout
 .main-content {
+  width: 860px;
+  max-width: 98vw;
+  height: 500px;
+  background: none;
+  border-radius: 22px;
+  box-shadow: 0 2px 34px 0 rgba(17,17,17,0.13);
   display: grid;
-  grid-template-columns: 1fr 400px;
-  min-height: calc(100vh - 80px);
-  position: relative;
-  
-  @media (max-width: 1200px) {
-    grid-template-columns: 1fr 350px;
-  }
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    grid-template-rows: 300px 1fr;
-  }
-}
-
-// Hero Section (Mandalorian Background)
-.hero-section {
-  position: relative;
+  grid-template-columns: 1fr 1.05fr;
   overflow: hidden;
-  z-index: 1;
-  
-  .hero-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center left;
-    background-repeat: no-repeat;
-    filter: brightness(0.8) contrast(1.1);
-    
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(
-        to right,
-        rgba($bg-dark, 0.3) 0%,
-        rgba($bg-dark, 0.1) 50%,
-        rgba($bg-dark, 0.7) 100%
-      );
-    }
+  position: relative;
+}
+
+.hero-section {
+  padding: 52px 48px 52px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: none;
+  color: $white;
+  min-width: 350px;
+
+  .main-heading {
+    font-size: 2.65rem;
+    font-weight: 700;
+    line-height: 1.09;
+    margin-bottom: 28px;
+    text-shadow: 0 2px 20px #10201043;
+    letter-spacing: .03em;
   }
-  
-  .logo-container {
-    position: absolute;
-    top: 40px;
-    left: 40px;
-    z-index: 5;
-    
-    .logo-image {
-      height: 80px;
-      width: auto;
-      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
-      transition: all 0.3s ease;
-      
-      &:hover {
-        filter: drop-shadow(0 6px 16px rgba($orange, 0.4));
-      }
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .logo-container {
-      top: 20px;
-      left: 20px;
-      
-      .logo-image {
-        height: 60px;
-      }
-    }
+  .sub-text {
+    color: $text-gray;
+    font-size: 1.03rem;
+    line-height: 1.6;
+    max-width: 370px;
   }
 }
 
-// Login Section (Black Box)
 .login-section {
-  background:radial-gradient(
-    ellipse at left center,
-    rgba(0, 0, 0, 0.95) 0%,
-    rgba(0, 0, 0, 0.7) 60%,
-    rgba(0, 0, 0, 0.2) 90%,
-    transparent 100%
-  );
-  backdrop-filter: blur(10px);
+  background: $form-bg;
+  padding: 52px 44px 40px 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 340px;
   position: relative;
-  z-index: 3;
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
-  
-  // Overlap effect
-  margin-left: -50px;
-  
-  @media (max-width: 1200px) {
-    margin-left: -30px;
-  }
-  
-  @media (max-width: 768px) {
-    margin-left: 0;
-    border-left: none;
-    backdrop-filter: blur(5px);
-  }
-  
+
   .login-content {
-    padding: 60px 40px;
-    height: 100%;
+    width: 100%;
+    max-width: 310px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+  }
+
+  .section-title {
+    font-weight: 700;
+    color: $white;
+    font-size: 2rem;
+    margin-bottom: 38px;
+    letter-spacing: .01em;
+    line-height: 1.14;
+  }
+
+  .input-group {
+    margin-bottom: 19px;
+    input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1.6px solid rgba($white, 0.28);
+      padding: 12px 0 11px 0;
+      color: $white;
+      font-size: 1.01rem;
+      transition: border-color 0.3s;
+      &::placeholder { color: rgba($white,0.42); }
+      &:focus { border-bottom-color: $accent; outline: none; }
+    }
+  }
+
+  .google-login-btn {
+    width: 100%;
+    background: $accent;
+    color: $white;
+    border: none;
+    border-radius: 4px;
+    padding: 15px 0;
+    font-size: 1.13rem;
+    font-weight: 600;
+    margin-top: 18px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: background 0.3s, box-shadow 0.2s, transform 0.17s;
+    box-shadow: 0 2px 8px rgba(22,150,133,0.11);
+
+    &:hover {
+      background: lighten($accent, 7%);
+      transform: translateY(-2px);
+    }
+    &:active { transform: translateY(0);}
+  }
+}
+
+.signin-instead {
+  font-size: 1.01rem;
+  color: #9ee5c4;
+  text-align: center;
+  margin-top: 7px;
+  a {
+    color: $accent;
+    margin-left: 3px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.14s;
+    &:hover { color: lighten($accent,15%); text-decoration: underline;}
+  }
+}
+
+.presented {
+  position: absolute;
+  bottom: 20px; left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: $white;
+  font-size: .97rem;
+  background: rgba(16,30,21,.80);
+  border-radius: 13px;
+  padding: 6px 13px;
+  opacity: .85;
+  .logo { height: 20px; }
+}
+
+// Responsive
+@media (max-width: 850px) {
+  .main-content {
+    grid-template-columns: 1fr; height: auto;
+    border-radius: 0; max-width: 98vw;
+  }
+  .hero-section, .login-section {
+    padding: 38px 11vw;
+    min-width: unset;
     align-items: center;
     text-align: center;
-    
-    @media (max-width: 768px) {
-      padding: 40px 20px;
-    }
   }
+  .login-content { max-width: 99vw;}
 }
-
-// Welcome Text
-.welcome-text {
-  margin-bottom: 40px;
-  
-  .main-heading {
-    font-family: 'Integral-CF-Bold', sans-serif;
-    font-size: 2.8rem;
-    color: $orange;
-    margin-bottom: 15px;
-    text-shadow: 0 0 20px rgba(yellow, 0.4);
-    line-height: 1.2;
-    
-    @media (max-width: 768px) {
-      font-size: 2.2rem;
-    }
-    
-    @media (max-width: 480px) {
-      font-size: 1.8rem;
-    }
-  }
-  
-  .sub-heading {
-    font-family: 'Electroharmonix', sans-serif;
-    font-size: 1.4rem;
-    color: $cream;
-    margin-bottom: 20px;
-    font-weight: 300;
-    
-    @media (max-width: 768px) {
-      font-size: 1.2rem;
-    }
-  }
-  
-  .description {
-    font-family: 'Integral-CF-Regular', sans-serif;
-    font-size: 1rem;
-    color: rgba($cream, 0.8);
-    line-height: 1.6;
-    max-width: 280px;
-    margin: 0 auto;
-    
-    @media (max-width: 768px) {
-      font-size: 0.9rem;
-    }
-  }
-}
-
-// Login Button
-.login-button-container {
-  width: 100%;
-  max-width: 300px;
-  margin-bottom: 20px;
-}
-
-.google-login-btn {
-  width: 100%;
-  background: linear-gradient(135deg, $orange 0%, yellow 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 16px 24px;
-  font-family: 'Integral-Cf-Regular', sans-serif;
-  font-size: 0.9rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba($orange, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  z-index:10;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-    transition: left 0.5s;
-  }
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba($orange, 0.5);
-    
-    &::before {
-      left: 100%;
-    }
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
-  }
-  
-  .google-icon {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-  }
-  
-  span {
-    white-space: nowrap;
-  }
-  
-  @media (max-width: 768px) {
-    font-size: 0.8rem;
-    padding: 14px 20px;
-    
-    .google-icon {
-      width: 18px;
-      height: 18px;
-    }
-  }
-}
-
-// Loading Spinner
-.loading-spinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba($orange, 0.3);
-    border-top: 3px solid $orange;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-// Responsive Design
-@media (max-width: 768px) {
-  .marquee-banner {
-    height: 60px;
-    
-    .marquee-content .brand-text {
-      font-size: 2rem;
-      margin-right: 60px;
-    }
-  }
-  
-  .main-content {
-    min-height: calc(100vh - 60px);
-  }
-}
-
-@media (max-width: 480px) {
-  .marquee-banner {
-    height: 50px;
-    
-    .marquee-content .brand-text {
-      font-size: 1.5rem;
-      margin-right: 40px;
-    }
-  }
-  
-  .main-content {
-    min-height: calc(100vh - 50px);
-  }
-  
-  .hero-section .logo-container {
-    top: 15px;
-    left: 15px;
-    
-    .logo-image {
-      height: 50px;
-    }
-  }
-  
-  .login-section .login-content {
-    padding: 30px 15px;
-  }
-  
-  .gaming-icons {
-    gap: 15px;
-    margin-bottom: 25px;
-    
-  }
-}
-
-// High contrast mode support
-@media (prefers-contrast: high) {
-  .login-section {
-    background: #000000;
-    border-left-color: #FFFFFF;
-  }
-  
-  .google-login-btn {
-    background: #FFFFFF;
-    color: #000000;
-    border: 2px solid #000000;
-  }
-}
-
-// Reduced motion support
-@media (prefers-reduced-motion: reduce) {
-  .marquee-content {
-    animation: none;
-  }
-  
-  .google-login-btn {
-    transition: none;
-  }
-}
-
-// Dark mode improvements
-@media (prefers-color-scheme: dark) {
-  .login-page {
-    background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-  }
-  
-  .login-section {
-    background: rgba(0, 0, 0, 0.98);
-  }
+@media (max-width: 520px) {
+  .main-content { border-radius: 0; }
+  .hero-section,
+  .login-section { padding: 22px 8px; }
+  .hero-section .main-heading { font-size: 1.43rem; }
+  .login-section .section-title { font-size: 1.23rem;}
 }

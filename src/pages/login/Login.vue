@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import { onBeforeMount, onMounted } from 'vue';
+import { onBeforeMount, onMounted} from 'vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -58,14 +58,13 @@ export default {
   });
 });
 
-  onMounted(() => {
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        router.replace('/Login');
-      }
-    });
-  });
-
+onMounted(()=>{
+  onAuthStateChanged(auth,async(user)=>{
+    if(user){//eslint-disable-next-line
+      window.location.href = '/index.html';
+    }
+  })
+})
   }
 };
 
