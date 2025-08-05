@@ -9,13 +9,22 @@ $text-gray: #cbd0cc;
 
 .login-page {
   min-height: 100vh;
-  width: 100vw;
-  background: #13361e;
-  background: url('@/assets/images/login-bg-mandalorian.jpg') center center/cover no-repeat,  // swap to your actual bg!
-              linear-gradient(120deg, #13361e 30%, #203c29 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: linear-gradient(135deg, $bg-dark 0%, $bg-dark-alt 100%);
+  font-family: 'Esporte', sans-serif;
+  overflow-x: hidden;
+  position: relative;
+}
+
+// Marquee Banner
+.marquee-banner {
+  background:radial-gradient(
+    ellipse at left center,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.7) 60%,
+    rgba(0, 0, 0, 0.2) 90%,
+    transparent 100%
+  );
+  height: 80px;
   overflow: hidden;
 }
 
@@ -65,7 +74,22 @@ $text-gray: #cbd0cc;
   justify-content: center;
   min-width: 340px;
   position: relative;
-
+  z-index: 3;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+  
+  // Overlap effect
+  margin-left: -50px;
+  
+  @media (max-width: 1200px) {
+    margin-left: -30px;
+  }
+  
+  @media (max-width: 768px) {
+    margin-left: 0;
+    border-left: none;
+    backdrop-filter: blur(5px);
+  }
+  
   .login-content {
     width: 100%;
     max-width: 310px;
