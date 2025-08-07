@@ -76,8 +76,7 @@
             <div class="top-player-card" v-for="(player, index) in topThreePlayers" :key="player.id">
               <span class="rank-overlay">{{ index + 1 }}</span>
               <div class="card-content">
-                <img :src="player.photoURL || '/public/assets/images/default-avatar.png'" alt="Player Avatar"
-                  class="player-avatar" />
+                <img :src="getRandomAvatar(entry.id)" alt="Player Avatar" class="player-avatar" />
                 <h4 class="player-name">{{ showTeams ? player.teamName : (player.gameName || player.displayName ||
                   player.userName) }}</h4>
                 <p class="player-points">{{ player.totalPoints.toFixed(2) }} Points</p>
@@ -255,7 +254,23 @@ export default {
         }
       });
     });
+    function getRandomAvatar(playerId) {
+      if (playerId) {
+        const idx = Math.abs(hashCode(playerId)) % 6 + 1; // 6 avatars available
+        return `/public/assets/avatars/avatar${idx}.jpg`;
+      }
+      return '/public/assets/avatars/avatar1.jpg'; // fallback
+    }
 
+    // Simple hash function for string to integer
+    function hashCode(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0; // Convert to 32bit integer
+      }
+      return hash;
+    }
 
     async function fetchLeaderboard() {
       const colName = showTeams.value ? 'teamRanking' : 'playerRanking';
@@ -334,22 +349,22 @@ export default {
 
     const carouselTrack = ref(null);
     const scrollCarousel = (direction) => {
-    playClickSound();
-    if (carouselTrack.value) {
-      // Dynamically get the card width for all screen sizes
-      const card = carouselTrack.value.querySelector('.top-player-card');
-      const cardWidth = card ? card.offsetWidth : 300;
-      const gapWidth = 32;
-      const scrollAmount = cardWidth + gapWidth;
-      const el = carouselTrack.value;
-      const target = direction === 'left' ? el.scrollLeft - scrollAmount: el.scrollLeft + scrollAmount;
+      playClickSound();
+      if (carouselTrack.value) {
+        // Dynamically get the card width for all screen sizes
+        const card = carouselTrack.value.querySelector('.top-player-card');
+        const cardWidth = card ? card.offsetWidth : 300;
+        const gapWidth = 32;
+        const scrollAmount = cardWidth + gapWidth;
+        const el = carouselTrack.value;
+        const target = direction === 'left' ? el.scrollLeft - scrollAmount : el.scrollLeft + scrollAmount;
 
-      el.scrollTo({
-        left: target,
-        behavior: 'smooth'
-      });
-    }
-  };
+        el.scrollTo({
+          left: target,
+          behavior: 'smooth'
+        });
+      }
+    };
 
 
 
@@ -406,7 +421,8 @@ export default {
       topThreePlayers,
       scrollCarousel,
       carouselTrack,
-      topSectionTitle // <-- Make sure to return the new property
+      topSectionTitle,
+      getRandomAvatar // <-- Make sure to return the new property
     };
   },
 };
@@ -864,7 +880,8 @@ tr:hover {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  gap: 2rem; /* Keep this gap */
+  gap: 2rem;
+  /* Keep this gap */
   padding-bottom: 1rem;
   flex-grow: 1;
   width: 100%;
@@ -879,12 +896,15 @@ tr:hover {
 .carousel-track::-webkit-scrollbar {
   display: none;
 }
+
 .top-player-card {
   flex: 0 0 auto;
   /* IMPORTANT: Set a fixed width here for all screen sizes, unless overridden by media queries */
-  width: 90%; /* Or whatever your desired default card width is */
+  width: 90%;
+  /* Or whatever your desired default card width is */
   margin: 3rem;
-  height: 300px; /* Keep consistent height */
+  height: 300px;
+  /* Keep consistent height */
   background: $bg-dark-alt;
   border: 2px solid $brown;
   border-radius: 15px;
@@ -898,7 +918,7 @@ tr:hover {
   justify-content: center;
   padding: 1rem;
   /* Remove or significantly reduce margin here. Gap on carousel-track will handle spacing. */
-   /* Set to 0, or a very small value like 0 0.5rem if you want slight internal card margin */
+  /* Set to 0, or a very small value like 0 0.5rem if you want slight internal card margin */
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   padding-top: 50px;
@@ -1148,7 +1168,7 @@ tr:hover {
   }
 
 
-  
+
   .rank-overlay {
     font-size: 5rem;
     top: -25px;
@@ -1268,7 +1288,7 @@ tr:hover {
   }
 
 
-  
+
 
 
   .rank-overlay {

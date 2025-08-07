@@ -27,14 +27,29 @@
         <div v-for="day in eventDays" :key="day.date" class="event-day">
           <h2>{{ formatDate(day.date) }}</h2>
           <div v-for="match in day.matches" :key="match.matchId" class="match-row">
-            <span class="team">{{ match.teamAName }}</span>
-            <span class="vs">VS</span>
-            <span class="team">{{ match.teamBName }}</span>
-            <span class="time">{{ match.time }}</span>
-            <span class="matchStatus" :class="match.isLive ? 'live' : 'upcoming'">
-              {{ match.isLive ? 'Live' : 'Yet to Begin' }}
-            </span>
+            <!-- Left team name -->
+            <div class="TeamsInfo">
+              <div class="match-col teamA">{{ match.teamAName }}</div>
+              <!-- Center VS + teamBName -->
+              <div class="match-col vs-center">
+                <span class="vs-text">VS</span>
+                <span class="teamB">{{ match.teamBName }}</span>
+              </div>
+            </div>
+            <!-- Right: time on top, status below -->
+            <div class="match-col time-status">
+              <div class="time">{{ match.time }}</div>
+              <div class="matchStatus">
+                <span class="matchStatus" :class="{
+                  status: day.isLive && match.isLive,
+                  result: !day.isLive && match.isLive
+                }">
+                  {{ !day.isLive ? match.result : match.status }}
+                </span>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </section>
@@ -122,6 +137,7 @@
 import NavigationBar from '@/components/NavigationBar.vue';
 import { onBeforeMount, ref, onMounted } from 'vue';
 import Toggle from '@vueform/toggle/src/Toggle';
+
 import '@vueform/toggle/themes/default.css'
 
 import fetchUser from '../../getUserData'
@@ -196,19 +212,20 @@ export default {
     });
 
     onMounted(async () => {
-      const days = [];
       const eventsSnapshot = await getDocs(collection(db, "events"));
-      eventsSnapshot.forEach(doc => {
-        const data = doc.data();
-        days.push({
-          date: data.Date,              // Note: lowercase 'date' for consistency
-          matches: data.matches || [],
-          isLive: data.isLive || false
-        });
-      });
+      // Filter for documents named 'Dayx' *AND* whose isLive === true
+      const dayDocs = eventsSnapshot.docs.filter(doc => /^Day\d+$/.test(doc.id) && doc.data().isLive === true);
+
+      const days = dayDocs.map(doc => ({
+        date: doc.data().Date,
+        matches: doc.data().matches || [],
+        isLive: doc.data().isLive || false,
+      }));
       days.sort((a, b) => new Date(a.date) - new Date(b.date));
       eventDays.value = days;
-    })
+    });
+
+
 
     async function statUpdateSubmit() {
       isSubmitting.value = true;
@@ -356,6 +373,8 @@ export default {
       }
     }
 
+
+
     async function createStatsDocs() {
       const teamSnapShot = await getDocs(collection(db, "teams"));
 
@@ -473,7 +492,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>@import "@/assets/styles/global.scss";
+<style lang="scss" scoped>
+@import "@/assets/styles/global.scss";
 
 .event-page {
   font-family: 'Integral-CF-Regular', sans-serif;
@@ -501,40 +521,46 @@ export default {
     border-radius: 13px;
     box-shadow: 0 4px 26px $brown30;
     display: flex;
-    flex-direction: column; /* vertical alignment */
-    align-items: center;    /* center horizontally */
-    gap: 0.8rem;
-    padding: 0.9rem 1.2rem 0.9rem 1.2rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem; // More space between content blocks
+    padding: 2rem 1.5rem 2rem 1.5rem; // More padding overall
     border: 2px solid $brown;
     overflow: hidden;
     backdrop-filter: blur(2.8px);
 
     p {
-      margin: 0;
-      font-size: 1rem;
+      margin: 0.3rem 0 !important; // Smaller, but consistent gap between lines
+      font-size: 1.1rem;
       color: $cream;
-      text-align: center;   /* center text inside */
+      text-align: center;
     }
 
     img {
-      width: 48px;
-      height: 48px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       border: 2.5px solid $orange;
       object-fit: cover;
       box-shadow: 0 1px 9.5px $red;
-      margin: 0 auto;       /* center image */
+      margin: 1rem auto 0.5rem auto;
       display: block;
     }
   }
 
+
   .eventsShow {
-    max-width: 820px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+    width: 80vw;
+    max-width: none;
     margin: 0 auto;
-    padding-top: 2.2vh;
+    padding: 2.5rem 0 1rem 0;
 
     .schedule-header,
-    .event-day > h2,
+    .event-day>h2,
     .event-day .fixture-table .match-row .team,
     .event-day .fixture-table .match-row .vs,
     .event-day .fixture-table .match-row .time,
@@ -557,112 +583,171 @@ export default {
       box-shadow: 0 0 10px 0 $red;
     }
 
+    .eventsShow::-webkit-scrollbar {
+      display: none;
+    }
+
+    .eventsShow {
+      -ms-overflow-style: none;
+      /* IE and Edge */
+      scrollbar-width: none;
+      /* Firefox */
+    }
+
     .event-day {
+      width: 80vw;
+      max-width: none;
+      margin-bottom: 5vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       background: linear-gradient(120deg, $bg-dark-alt 90%, $brown30 100%);
       border: 1.5px solid $red;
       border-radius: 10px;
       box-shadow: 0 1.2px 10px $red;
-      margin-bottom: 1.34rem;
-      padding: 1.17rem 1.15rem 0.85rem 1.07rem;
-      transition: box-shadow .23s, transform .23s;
-      position: relative;
-
-      &:hover {
-        box-shadow: 0 0 21px 0 $orange, 0 0 23px 0 $red;
-        transform: translateY(-2px) scale(1.011);
-      }
+      padding: 2rem 1.5rem 1rem 1.5rem;
 
       h2 {
-        font-family: 'Esporte', serif;
-        font-size: 1.11rem;
-        letter-spacing: 1.1px;
-        color: $orange;
-        text-shadow: 0 0 6px $red;
-        padding-bottom: 0.45rem;
-        border-bottom: 1px solid $orange;
-        margin-bottom: 1.01rem;
+        text-align: center; // Center the date
       }
 
-      .fixture-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 7px;
+      .match-row {
+        width: 75vw;
+        padding-top: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        align-items: center;
+        min-height: 100px;
+        background: $brown30;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        border: 1px solid $red;
+        box-shadow: 0 0 4px $brown, 0 0 4.7px $red inset;
+        /* Remove flex rules from here */
+        gap: 0 0;
+        /* No gap between columns/rows */
 
-        .match-row {
+        .match-col {
           display: flex;
-          justify-content: space-between;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .teamA {
+          flex: 1.7;
+          font-family: 'Esporte', serif;
+          font-size: 2rem;
+          font-weight: bold;
+          color: $cream90;
+          align-items: flex-start;
+          justify-content: center;
+          text-align: left;
+        }
+
+        .vs-center {
+          flex: 2.5;
+          display: flex;
+          flex-direction: row;
           align-items: center;
-          padding: 0.67rem 0.7rem 0.67rem 0.7rem;
-          border-radius: 8px;
-          margin-bottom: 5px;
-          background: $brown30;
-          box-shadow: 0 0 4px $brown, 0 0 4.7px $red inset;
-          border: 1px solid $red;
+          gap: 0.45rem;
+          justify-content: center;
 
-          .team {
-            flex: 1 1 0;
+          .vs-text {
             font-family: 'Esporte', serif;
-            font-size: 1.03rem;
-            color: $cream90;
-            font-weight: bold;
-            text-shadow: 0 0 2px $red;
-            text-align: center;
-            min-width: 62px;
-          }
-          .vs {
-            flex: 0 1 46px;
             color: $red;
+            font-weight: bold;
+            letter-spacing: 1.1px;
+            font-size: 1.25rem;
+          }
+
+          .teamB {
             font-family: 'Esporte', serif;
             font-weight: bold;
-            font-size: 1rem;
-            text-shadow: 0 0 4px $red;
-            text-align: center;
-            letter-spacing: 0.5px;
-            margin: 0 4.5px;
+            color: $cream90;
+            font-size: 2rem;
           }
-          .time {
-            flex: 0 1 84px;
-            color: $cream80;
-            text-shadow: 0 0 2.1px $brown;
-            text-align: center;
-            font-size: 0.98rem;
-            font-style: italic;
-            margin-left: 9.5px;
-            font-family: 'Esporte', serif;
-          }
-          .matchStatus {
-            flex: 0 1 114px;
-            text-align: center;
-            font-size: 0.96rem;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            border-radius: 14px;
-            padding: 0.15rem 0.85rem;
-            font-weight: 700;
-            background: none;
-            border: 2px solid transparent;
-            box-shadow: none;
-            font-family: 'Esporte', serif;
+        }
 
-            &.live {
+        .time-status {
+          grid-column: 2/3;
+          grid-row: 1/2;
+          justify-self: end;
+          align-self: start;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.2rem;
+          min-width: 90px;
+
+          .time {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: $orange;
+            margin: 0 0 0.3rem 0;
+            text-align: right;
+            line-height: 1.1;
+          }
+
+          .matchStatus {
+            grid-column: 2/3;
+            grid-row: 2/3;
+            justify-self: end;
+            align-self: start;
+            display: inline-block;
+            padding: 0.4rem 1.2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-sizing: border-box;
+            margin: 0;
+            /* No additional margin needed */
+            text-align: right;
+
+            &.status,
+            &.ongoing {
               background: linear-gradient(90deg, #f15229 70%, #c40817 100%);
               color: #fff;
               border: 2px solid $orange;
-              box-shadow: 0 0 7.5px $red, 0 0 11px $orange;
+              box-shadow: 0 0 8px $orange;
               animation: blinklive 1.1s infinite alternate;
+            }
+
+            &.result {
+              background: $brown;
+              color: $orange;
+              border: 2px solid $orange;
+              font-weight: 700;
             }
 
             &.upcoming {
               background: $brown30;
               color: $cream90;
               border: 2px dashed $orange;
-              font-weight: 400;
-              letter-spacing: 1.2px;
             }
           }
         }
+
+        .TeamsInfo {
+          grid-column: 1/2;
+          grid-row: 1/2;
+          justify-self: start;
+          align-self: start;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 1rem;
+          white-space: nowrap;
+          font-size: 3rem;
+          font-weight: 600;
+          color: $cream90;
+        }
+
       }
     }
+
 
     .no-live-message {
       margin: 4.5vh 0 0 0;
@@ -678,6 +763,8 @@ export default {
       backdrop-filter: blur(2px);
     }
   }
+
+
 
   .EventSettings {
     margin-top: 3.2rem;
@@ -771,8 +858,56 @@ export default {
   0% {
     box-shadow: 0 0 8px $orange, 0 0 12px $red;
   }
+
   100% {
     box-shadow: 0 0 15px $orange, 0 0 18px $red;
   }
+}
+
+nav {
+  width: 100%;
+  display: block;
+  position: relative;
+  /* or fixed/sticky as per your logic */
+  z-index: 10;
+}
+
+
+
+.container {
+  width: 100%;
+  max-width: none; // ✅ remove fixed max-width
+  margin: 0; // ✅ remove centering
+  padding: 0 1rem; // optional, if you still want side spacing
+}
+
+// Make the NavigationBar always stretch full width, and push it to the very top.
+.event-page>.navbar {
+  width: 100vw; // Full viewport width, like leaderboard
+  margin: 0 !important; // No extra margin
+  padding: 0.5rem 2rem; // Same as leaderboard's navbar
+  box-sizing: border-box;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  transform: translate(-50%, 0); // Center it (handles the 100vw inside other boxed elements)
+  z-index: 20;
+  border-radius: 0; // No rounding
+  background: $bg-dark; // Or whatever you use
+  // Optional: add .navbar-specific box-shadow, etc as in leaderboard
+}
+
+// Remove any "auto/max-width" limits or margin-top
+.event-page {
+  margin: 0;
+  padding: 0;
+  width: 100vw; // Ensure parent fills viewport horizontally
+  min-height: 100vh; // Optional, for full screen
+
+}
+
+// If you want a gap BELOW nav like leaderboard, add:
+.event-page>.navbar {
+  margin-bottom: 2rem;
 }
 </style>
