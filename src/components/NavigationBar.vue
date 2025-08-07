@@ -255,6 +255,19 @@ export default {
   }
 }
 
+.navigation-bar {
+  width: 100vw;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow-x: visible;
+
+  // Optional: flex layout for spacing
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 // Brand Section
 .navbar-brand {
   display: flex;
