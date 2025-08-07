@@ -7,54 +7,63 @@
       <div class="hero-headline">
         <h1>The Battle Begins!</h1>
         <p class="hero-subtext">Witness the clash of titans as teams battle for glory.</p>
-        <div class="hero-info-box">
+        <div class="hero-info-box" v-if="!hasEventStarted">
           Register here as a particpant to join the competition and showcase your skills!
         </div>
       </div>
     </section>
 
     <!-- VERSUS OR NO EVENT MESSAGE -->
-    <section class="live-match-spotlight-section" v-if="hasEventStarted">
-      <div v-if="isLive" class="match-wrapper">
-        <h2 class="ongoing-match">Ongoing Match</h2>
-          <div class="live-match-spotlight">
-          <div class="team team-a"> 
+    <!-- VERSUS OR NO EVENT MESSAGE -->
+<section class="live-match-spotlight-section" v-if="hasEventStarted">
+  <div v-if="liveMatches.length > 0" class="matches-container">
+    <h2 class="ongoing-matches-title">Live Matches</h2>
+    
+    <!-- Loop through each live match -->
+    <div v-for="match in liveMatches" :key="match.id" class="match-wrapper match-divider">
+      <div class="live-match-spotlight">
+        <div class="team team-a"> 
           <div class="team-bg"></div>
-          <h2>{{ teamAName || 'Team Alpha' }}</h2>
+          <h2>{{ match.teamA.name }}</h2>
           <ul>
-            <li v-for="player in teamAPlayers" :key="player.id">
-              {{ player.gameName || player.displayName || player }}
+            <li v-for="(player, index) in match.teamA.players" :key="index">
+              {{ player }}
             </li>
           </ul>
           <div class="team-stats">
-            <span>WINS: {{ teamAStats.matchesWon }}</span>
-            <span>KILLS: {{ teamAStats.accumulatedKills }}</span>
-            <span>DEATHS: {{ teamAStats.accumulatedDeaths }}</span>
+            <span>WINS: {{ match.teamA.stats.matchesWon }}</span>
+            <span>KILLS: {{ match.teamA.stats.accumulatedKills }}</span>
+            <span>DEATHS: {{ match.teamA.stats.accumulatedDeaths }}</span>
           </div>
         </div>
+        
         <div class="versus">
           <span>VS</span>
         </div>
+        
         <div class="team team-b">
           <div class="team-bg"></div>
-          <h2>{{ teamBName || 'Team Bravo' }}</h2>
+          <h2>{{ match.teamB.name }}</h2>
           <ul>
-            <li v-for="player in teamBPlayers" :key="player.id">
-              {{ player.gameName || player.displayName || player }}
+            <li v-for="(player, index) in match.teamB.players" :key="index">
+              {{ player }}
             </li>
           </ul>
           <div class="team-stats">
-            <span>WINS: {{ teamBStats.matchesWon }}</span>
-            <span>KILLS: {{ teamBStats.accumulatedKills }}</span>
-            <span>DEATHS: {{ teamBStats.accumulatedDeaths }}</span>
+            <span>WINS: {{ match.teamB.stats.matchesWon }}</span>
+            <span>KILLS: {{ match.teamB.stats.accumulatedKills }}</span>
+            <span>DEATHS: {{ match.teamB.stats.accumulatedDeaths }}</span>
           </div>
         </div>
-        </div>
       </div>
-      <div v-else class="no-event-message">
-        <h2>No current events scheduled for now</h2>
-      </div>
-    </section>
+    </div>
+  </div>
+  
+  <div v-else class="no-event-message">
+    <h2>No live matches at the moment</h2>
+    <h3>Check back later for upcoming matches!</h3>
+  </div>
+</section>
 
     <!-- REGISTRATION FORM (shown when event not started and not participated) -->
     <section class="submit-form" v-if="!userHasParticipated && !hasEventStarted">
@@ -192,27 +201,34 @@
     </section>
 
     <!-- FEATURED PLAYERS (shown when event started) -->
-    <div class="featured-profiles" v-if="hasEventStarted">
-      <h3>Featured Players</h3>
-      <div class="featured-list">
-        <div class="featured-card" v-for="player in featuredPlayers" :key="player.id">
-          <img :src="player.photoURL || player.photoURL " alt="avatar" />
-          <div class="featured-info">
-            <span class="featured-name">{{ player.gameName || player.displayName }}</span>
-            <span class="featured-metric">Kills: {{ player.kills }}</span>
-            <span class="featured-metric">Deaths: {{ player.deaths }}</span>
-          </div>
-        </div>
+    <!-- Update the featured players section -->
+<div class="featured-profiles" v-if="hasEventStarted">
+  <h3 data-sr-id="featured-title">Featured Players</h3>
+  <div class="featured-list">
+    <div class="featured-card" 
+         v-for="(player, index) in featuredPlayers" 
+         :key="player.id"
+         :data-sr-delay="index * 100">
+      <img :src="player.photoURL || player.photoURL" alt="avatar" />
+      <div class="featured-info">
+        <span class="featured-name">{{ player.gameName || player.displayName }}</span>
+        <span class="featured-metric">Kills: {{ player.kills }}</span>
+        <span class="featured-metric">Deaths: {{ player.deaths }}</span>
       </div>
-      <button class="leaderboard-link" @click="goToLeaderboard">
-        View Leaderboard & MVPs
-      </button>
     </div>
+  </div>
+  <div class="leaderboard-button-container">
+    <button class="leaderboard-link" @click="goToLeaderboard">
+      View Leaderboard & MVPs
+    </button>
+  </div>
+</div>
+
   </div>
 </template>
 
 <script>
-import { onBeforeMount, ref, watch, onMounted } from 'vue';
+import { onBeforeMount, ref, watch, onMounted,onBeforeUnmount } from 'vue';
 //import { useRouter } from 'vue-router';
 import firebaseApp from '../../firebase';
 import { onAuthStateChanged } from "firebase/auth";
@@ -236,6 +252,7 @@ import { getApp } from 'firebase/app';
 import NavigationBar from '@/components/NavigationBar.vue';
 import ScrollReveal from 'scrollreveal';
 import anime from 'animejs';
+import { onSnapshot } from 'firebase/firestore';
 
 const userInfo = ref(null);
 
@@ -281,6 +298,11 @@ export default {
       accumulatedKills: 0,
       accumulatedDeaths: 0
     });
+    // NEW: Arrays to handle multiple matches
+    const liveMatches = ref([]);
+    const eventStatusListener = ref(null);
+    const dayListeners = ref([]);
+
 
     // Featured players
     const featuredPlayers = ref([]);
@@ -305,88 +327,284 @@ export default {
       });
     });
 
-    onMounted(async () => {
-      // Get event start status
-      const eventStatusSnap = await getDoc(doc(db, "events", "currentEvent"));
-      hasEventStarted.value = eventStatusSnap.exists() && eventStatusSnap.data().eventStatus;
+onMounted(async () => {
+  // Setup real-time listener for event status
+  setupEventStatusListener();
+  
+  // Initialize animations
+  initializeAnimations();
+});
 
-      if (hasEventStarted.value) {
-        // Get live match info
-        const eventsSnapshot = await getDocs(collection(db, "events"));
-        let foundMatch = null;
-        eventsSnapshot.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data.isLive && data.matches && data.matches.length > 0 && !foundMatch) {
-            isLive.value = true;
-            foundMatch = data.matches[0];
-            teamAName.value = foundMatch.teamAName;
-            teamBName.value = foundMatch.teamBName;
-            teamAPlayers.value = [];
-            teamBPlayers.value = [];
-            if (foundMatch.teamAName) {
-              fetchTeamStats(foundMatch.teamAName, teamAStats, teamAPlayers);
-            }
-            if (foundMatch.teamBName) {
-              fetchTeamStats(foundMatch.teamBName, teamBStats, teamBPlayers);
-            }
-          }
-        });
-        if (!isLive.value) {
-          teamAName.value = '';
-          teamBName.value = '';
-        }
-
-        // Fetch featured players after event starts
-        await fetchFeaturedPlayers();
+// ADD these new functions BEFORE the return statement:
+function setupEventStatusListener() {
+  const eventStatusRef = doc(db, "events", "currentEvent");
+  
+  eventStatusListener.value = onSnapshot(eventStatusRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const eventStarted = docSnap.data().eventStatus || false;
+      hasEventStarted.value = eventStarted;
+      
+      if (eventStarted) {
+        setupDayListeners();
+        fetchFeaturedPlayers();
+      } else {
+        cleanupDayListeners();
+        liveMatches.value = [];
       }
+    } else {
+      hasEventStarted.value = false;
+    }
+  });
+}
 
-      ScrollReveal().reveal('.hero-headline', { origin: 'top', distance: '50px', duration: 1000 });
-      ScrollReveal().reveal('.live-match-spotlight-section', { origin: 'bottom', distance: '50px', duration: 1000 });
-      ScrollReveal().reveal('.submit-form', { origin: 'bottom', distance: '20px', delay: 300 });
-      ScrollReveal().reveal('.featured-profiles', { origin: 'bottom', distance: '50px', duration: 1000 });
-      ScrollReveal().reveal('.requests', { origin: 'bottom', distance: '20px', delay: 300 });
+function setupDayListeners() {
+  // Clean up existing listeners first
+  cleanupDayListeners();
+  
+  // List of days to monitor (add more as needed)
+  const daysToMonitor = ['Day1', 'Day2', 'Day3', 'Day4', 'Day5'];
+  
+  daysToMonitor.forEach(dayName => {
+    const dayRef = doc(db, "events", dayName);
     
-      anime({
-        targets: '.hero-headline h1',
-        translateX: [-100, 0],
-        opacity: [0, 1],
-        easing: 'easeOutExpo',
-        duration: 1200
-      });
+    const unsubscribe = onSnapshot(dayRef, async (docSnap) => {
+      if (docSnap.exists()) {
+        const dayData = docSnap.data();
+        
+        // Check if this day is live
+        if (dayData.isLive && dayData.matches) {
+          await processDayMatches(dayName, dayData.matches);
+        } else {
+          // Remove matches from this day if no longer live
+          removeDayMatches(dayName);
+        }
+      }
+    });
+    
+    dayListeners.value.push({ day: dayName, unsubscribe });
+  });
+}
 
-      anime({
-        targets: '.featured-card',
-        scale: [0.8, 1],
-        opacity: [0, 1],
-        delay: anime.stagger(150, { start: 500 }),
-        easing: 'easeOutBack',
-        duration: 800
-      });
+ async function fetchTeamData(user){
+        if(!user.teamId) return;
 
-      // Button pulse on hover
-      //eslint-disable-next-line
-      const btn = document.querySelector('.leaderboard-link');
-      if(btn)
-      {
-      btn.addEventListener('mouseenter', () => {
-        anime({
-          targets: btn,
-          scale: 1.05,
-          duration: 200,
-          easing: 'easeInOutQuad'
-        });
-      });
-      btn.addEventListener('mouseleave', () => {
-        anime({
-          targets: btn,
-          scale: 1,
-          duration: 200,
-          easing: 'easeInOutQuad'
-        });
-      });
+        const teamDoc = await getDoc(doc(db, "teams", user.teamId));
+        if((await teamDoc).exists()){
+            const teamData = teamDoc.data();
+            isTeamCreator.value = teamData.creatorUid === user.uid;
+            if(isTeamCreator.value){
+                fetchTeamRequests(user.teamId);
+                fetchTeamMembers(teamData.members);
+                return;
+            }
+            
+            if(!teamData.members.includes(user.uid)){
+                fetchUserRequests(user.uid);
+                return;
+            }
+
+            fetchTeamMembers(teamData.members);
+            return;
+        }
+    }
+
+async function processDayMatches(dayName, matches) {
+  const validMatches = [];
+  
+  // Process each match in the day
+  for (let index = 0; index < matches.length; index++) {
+    const match = matches[index];
+    
+    // Only process matches with 'ongoing' status
+    if (match.status === 'ongoing') {
+      const processedMatch = await processMatch(match, dayName, index);
+      if (processedMatch) {
+        validMatches.push(processedMatch);
+      }
+    }
+  }
+  
+  // Update live matches - remove old matches from this day and add new ones
+  liveMatches.value = liveMatches.value.filter(m => m.dayName !== dayName);
+  liveMatches.value.push(...validMatches);
+}
+
+async function processMatch(match, dayName, matchIndex) {
+  try {
+    const processedMatch = {
+      id: `${dayName}_${matchIndex}`,
+      dayName: dayName,
+      matchIndex: matchIndex,
+      status: match.status,
+      teamA: {
+        name: match.teamAName || match.team1?.name || 'Team Alpha',
+        players: [],
+        stats: { matchesWon: 0, accumulatedKills: 0, accumulatedDeaths: 0 }
+      },
+      teamB: {
+        name: match.teamBName || match.team2?.name || 'Team Bravo', 
+        players: [],
+        stats: { matchesWon: 0, accumulatedKills: 0, accumulatedDeaths: 0 }
+      }
+    };
+    
+    // Fetch team stats for both teams
+    if (processedMatch.teamA.name) {
+      await fetchTeamStatsForMatch(processedMatch.teamA.name, processedMatch.teamA);
     }
     
+    if (processedMatch.teamB.name) {
+      await fetchTeamStatsForMatch(processedMatch.teamB.name, processedMatch.teamB);
+    }
+    
+    return processedMatch;
+    
+  } catch (error) {
+    console.error(`Error processing match ${dayName}_${matchIndex}:`, error);
+    return null;
+  }
+}
+
+async function fetchTeamStatsForMatch(teamName, teamObj) {
+  try {
+    const teamsSnapshot = await getDocs(collection(db, "teams"));
+    let teamId = '';
+    
+    teamsSnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.teamName === teamName) {
+        teamId = docSnap.id;
+      }
+    });
+    
+    if (!teamId) return;
+    
+    const teamStatsDoc = await getDoc(doc(db, "teamstats", teamId));
+    if (teamStatsDoc.exists()) {
+      const stats = teamStatsDoc.data();
+      teamObj.stats = {
+        matchesWon: stats.matchesWon || 0,
+        accumulatedKills: stats.accumulatedKills || 0,
+        accumulatedDeaths: stats.accumulatedDeaths || 0
+      };
+      
+      // Fetch player names
+      const members = stats.members || [];
+      const playerNames = [];
+      
+      for (const uid of members) {
+        const userDoc = await getDoc(doc(db, "users", uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          playerNames.push(userData.gameName || userData.displayName || uid);
+        }
+      }
+      
+      teamObj.players = playerNames;
+    }
+  } catch (error) {
+    console.error(`Error fetching stats for team ${teamName}:`, error);
+  }
+}
+
+function removeDayMatches(dayName) {
+  liveMatches.value = liveMatches.value.filter(match => match.dayName !== dayName);
+}
+
+function cleanupDayListeners() {
+  dayListeners.value.forEach(({ unsubscribe }) => {
+    if (unsubscribe) unsubscribe();
+  });
+  dayListeners.value = [];
+}
+
+function initializeAnimations() {
+  // Enhanced ScrollReveal animations
+  ScrollReveal().reveal('.hero-headline', { 
+    origin: 'top', 
+    distance: '50px', 
+    duration: 1000,
+    easing: 'ease-out'
+  });
+  
+  ScrollReveal().reveal('.ongoing-matches-title', { 
+    origin: 'top', 
+    distance: '30px', 
+    duration: 800,
+    delay: 200
+  });
+  
+  ScrollReveal().reveal('.match-wrapper', { 
+    origin: 'bottom', 
+    distance: '50px', 
+    duration: 1000,
+    interval: 300
+  });
+  
+  ScrollReveal().reveal('.featured-profiles h3', { 
+    origin: 'top', 
+    distance: '30px', 
+    duration: 800
+  });
+  
+  ScrollReveal().reveal('.featured-card', { 
+    origin: 'bottom', 
+    distance: '30px', 
+    duration: 600,
+    delay: 100,
+    interval: 150
+  });
+  
+  ScrollReveal().reveal('.leaderboard-button-container', { 
+    origin: 'bottom', 
+    distance: '20px', 
+    duration: 800,
+    delay: 400
+  });
+
+  // Enhanced Anime.js animations
+  anime({
+    targets: '.hero-headline h1',
+    translateX: [-100, 0],
+    opacity: [0, 1],
+    easing: 'easeOutExpo',
+    duration: 1200
+  });
+
+  anime({
+    targets: '.team',
+    scale: [0.9, 1],
+    opacity: [0, 1],
+    delay: anime.stagger(200, {start: 500}),
+    easing: 'easeOutBack',
+    duration: 800
+  });
+
+  // Button hover animations
+  //eslint-disable-next-line
+  const buttons = document.querySelectorAll('.leaderboard-link, button[type="submit"]');
+  buttons.forEach(btn => {
+    btn.addEventListener('mouseenter', () => { 
+      anime({
+        targets: btn,
+        scale: 1.05,
+        duration: 200,
+        easing: 'easeInOutQuad'
       });
+    });
+    
+    btn.addEventListener('mouseleave', () => {
+      anime({
+        targets: btn,
+        scale: 1,
+        duration: 200,
+        easing: 'easeInOutQuad'
+      });
+    });
+  });
+}
+
+
 
    // Registration logic
     async function submitParticipation() {
@@ -503,37 +721,6 @@ export default {
       return true;
     }
 
-
-    async function fetchTeamStats(teamName, statsRef, playersRef) {
-      const teamsSnapshot = await getDocs(collection(db, "teams"));
-      let teamId = '';
-      teamsSnapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data.teamName === teamName) {
-          teamId = docSnap.id;
-        }
-      });
-      if (!teamId) return;
-      const teamStatsDoc = await getDoc(doc(db, "teamstats", teamId));
-      if (teamStatsDoc.exists()) {
-        const stats = teamStatsDoc.data();
-        statsRef.value = {
-          matchesWon: stats.matchesWon || 0,
-          accumulatedKills: stats.accumulatedKills || 0,
-          accumulatedDeaths: stats.accumulatedDeaths || 0
-        };
-        const members = stats.members || [];
-        const playerNames = [];
-        for (const uid of members) {
-          const userDoc = await getDoc(doc(db, "users", uid));
-          if (userDoc.exists()) {
-            playerNames.push(userDoc.data().gameName || userDoc.data().displayName || uid);
-          }
-        }
-        playersRef.value = playerNames;
-      }
-    }
-
     async function fetchFeaturedPlayers() {
       const q = query(collection(db, "playerRanking"), 
       orderBy("normalizedKills", "desc"), limit(3));
@@ -570,29 +757,6 @@ export default {
       }
     });
  
-    async function fetchTeamData(user){
-        if(!user.teamId) return;
-
-        const teamDoc = await getDoc(doc(db, "teams", user.teamId));
-        if((await teamDoc).exists()){
-            const teamData = teamDoc.data();
-            isTeamCreator.value = teamData.creatorUid === user.uid;
-            if(isTeamCreator.value){
-                fetchTeamRequests(user.teamId);
-                fetchTeamMembers(teamData.members);
-                return;
-            }
-            
-            if(!teamData.members.includes(user.uid)){
-                fetchUserRequests(user.uid);
-                return;
-            }
-
-            fetchTeamMembers(teamData.members);
-            return;
-        }
-    }
-
     async function fetchTeamRequests(teamID){
         requestsLoading.value = true;
         const q = query(
@@ -700,6 +864,15 @@ export default {
         }
     }    
 
+    onBeforeUnmount(() => {
+  // Cleanup Firebase listeners
+  if (eventStatusListener.value) {
+    eventStatusListener.value();
+  }
+  cleanupDayListeners();
+});
+
+
     return {
       userInfo,
       isSubmitting,
@@ -726,6 +899,7 @@ export default {
       declineRequest,
       submitNewRequest,
       isLive,
+      liveMatches,
       teamAName,
       teamBName,
       teamAPlayers,
@@ -748,6 +922,8 @@ export default {
   background: $bg-dark;
   color: $cream;
   padding-bottom: 4rem;
+  overflow-x: hidden;
+
   
 }
 
@@ -762,6 +938,10 @@ export default {
   padding-top: 3rem;
   position: relative;
   overflow-x: hidden;
+
+  @media (min-width: 768px) {
+    padding: 3rem 2rem 2rem;
+  }
 }
 
 .hero-headline {
@@ -769,28 +949,28 @@ export default {
   margin-bottom: 2rem;
   h1 {
     font-family: 'Esporte', serif;
-    font-size: 4rem;
+    font-size: 5rem;
     color: $orange;
-    letter-spacing: 2px;
-    text-shadow: 0 0 30px $orange, 0 0 60px $orange;
+    letter-spacing: 2.5px;
+    text-shadow: 0 0 5px $orange;
     margin-bottom: 1rem;
   }
   .hero-subtext {
     font-family: 'Integral-CF-Regular', sans-serif;
     color: $cream;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     opacity: 0.85;
     margin-bottom: 0.5rem;
   }
   .hero-info-box {
-    margin: 1.2rem auto 0 auto;
+    margin: 1.5rem auto 0 auto;
     background: $brown30;
     color: $red;
     font-family: 'Integral-CF-Regular', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     border-radius: 16px;
     padding: 1rem 2rem;
-    max-width: 500px;
+    max-width: 600px;
     box-shadow: 0 2px 12px $brown30;
   }
 }
@@ -803,47 +983,77 @@ export default {
   width: 100%;
   margin-bottom: 6rem;
 
-   .match-wrapper {
-    width: 90%;
-    max-width: 1400px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .live-match-spotlight {
-    display: flex;
-    flex: 1;
-    border-radius: 40px;
-    overflow: visible;
-    box-shadow: 0 10px 40px rgba(52, 3, 7, 0.35);
-    background: transparent;
-    position: relative;
-    align-items: stretch;
-    gap: 1rem; // optional spacing between teams and versus
-  }
-  .ongoing-match {
+  .matches-container {
+  width: 90%;
+  max-width: 1400px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.ongoing-matches-title {
   width: 100%;
   text-align: center;
   font-family: 'Esporte', serif;
   color: $cream;
-  font-size: 2.8rem; // slightly smaller if needed on narrow
-  margin: 0 auto 1rem auto;
+  font-size: 3.5rem;
+  margin: 0 auto 2rem auto;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2.5px;
   padding-bottom: 0.5rem;
   position: relative;
-  &:after {
-    content: '';
-    display: block;
-    width: 120px;
-    height: 3px;
-    background: rgba($orange, 0.8);
-    margin: 8px auto 0;
-    border-radius: 2px;
-  }
+  align-self: center;
 }
 
+.ongoing-matches-title:after {
+  content: '';
+  display: block;
+  width: 120px;
+  height: 3px;
+  background: rgba(241, 82, 41, 0.8); // Adjust $orange variable if you want
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
+
+   .match-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+
+    &.match-divider:not(:last-child)::after {
+    content: '';
+    margin-top: 1.5rem;
+    position: absolute;
+    bottom: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85%;
+    max-width: 900px;
+    height: 5px;
+    background: linear-gradient(90deg, transparent, $orange, transparent);
+    opacity: 0.8;
+    }
+  }
+
+  .live-match-spotlight {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-gap: 1rem;
+    width: 85%;
+    max-width: 1200px;
+    border-radius: 25px;
+    overflow: visible;
+    position: relative;
+    align-items: stretch;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      grid-gap: 1.5rem;
+      text-align: center;
+    }
+  }
 
   .team {
     flex: 1 1 0;
@@ -853,14 +1063,15 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: space-between;
+    min-height: var(--team-card-min-height);
     min-width: 0;
     z-index: 2;
     background: transparent;
-    box-shadow: none;
+    box-shadow: 0 8px 30px rgba(52, 3, 7, 0.18);
     h2 {
       font-family: 'Esporte', serif;
-      font-size: 2rem;
+      font-size: 3rem;
       color: $cream;
       margin-bottom: 1rem;
       text-shadow: 0 0 10px $orange;
@@ -868,7 +1079,11 @@ export default {
     ul {
       list-style: none;
       padding: 0;
-      margin-bottom: 1.2rem;
+      margin-bottom: 1.1rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
       li {
         font-family: 'Integral-CF-Regular', sans-serif;
         color: $cream80;
@@ -879,6 +1094,7 @@ export default {
         padding: 0.3rem 0.8rem;
         display: inline-block;
         transition: background 0.2s;
+        text-overflow: ellipsis;
       }
       li:hover {
         background: $cream20;
@@ -886,7 +1102,8 @@ export default {
     }
     .team-stats {
       display: flex;
-      gap: 1.5rem;
+      justify-content: space-around;
+      gap: 1rem;
       font-size: 1rem;
       color: $orange;
       font-family: 'Integral-CF-Bold', sans-serif;
@@ -896,7 +1113,12 @@ export default {
         border-radius: 8px;
         padding: 0.3rem 1rem;
         box-shadow: 0 2px 8px rgba(52,3,7,0.12);
+        flex: 1;
       }
+       @media (max-width: 480px) {
+      flex-direction: column;
+      gap: 0.3rem;
+    }
     }
   }
   .team-a {
@@ -944,14 +1166,20 @@ export default {
   }
   .no-event-message {
     width: 100%;
+    align-items: center;
     text-align: center;
-    padding: 2rem 0;
+    padding-bottom: 2rem 0;
     h2 {
       font-family: 'Integral-CF-Bold', sans-serif;
-      color: $orange;
-      font-size: 1.5rem;
-      margin-top: 2rem;
+      color: $dark-red;
+      font-size: 2.5rem;
     }
+
+    h3 {
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    color: $cream80;
+    font-size: 1.8rem;
+  }
   }
 }
 
@@ -962,14 +1190,15 @@ export default {
   justify-content: center;
   align-items: flex-start;
   padding-top: 2rem;
+  align-self: center  ;
   .participation-form {
     background: linear-gradient(120deg, $bg-dark-alt 0%, $cream20 100%);
     border-radius: 30px;
     box-shadow: 0 8px 30px rgba(52,3,7,0.18);
     padding: 2rem 2.5rem;
-    min-width: 320px;
-    max-width: 600px;
-    width: 100%;
+    min-width: 0px;
+    max-width: 700px;
+    width: 80%;
     margin-bottom: 2rem;
     .FormTitle h1 {
       font-family: 'Esporte', serif;
@@ -1023,7 +1252,7 @@ export default {
             display: none;
           }
           .toggle-hint {
-              font-size: 0.9rem;
+              font-size: 1.3rem;
               color: $cream80;
               font-family: 'Integral-CF-Regular', sans-serif;
               font-size: 70%;
@@ -1135,7 +1364,7 @@ export default {
 
 // FEATURED PLAYERS
 .featured-profiles {
-  width: 90%;
+  width: 85%;
   align-items: center;
   max-width: 1200px;
   margin: 2.5rem auto 0 auto;
@@ -1146,16 +1375,30 @@ export default {
   h3 {
     font-family: 'Esporte', serif;
     color: $dark-red;
-    font-size: 3rem;
-    margin-bottom: 2rem;
+    font-size: 3.5rem;
+    margin-bottom: 3.5rem;
     text-align: center;
   }
   .featured-list {
     display: flex;
-    gap: 2rem;
+    gap: 1.5rem;
     flex-wrap: wrap;
     justify-content: center;
     margin-bottom: 1.5rem;
+
+ // Desktop: horizontal layout (slim appearance)
+    @media (min-width: 992px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: stretch;
+    }
+    
+    // Mobile: vertical stack
+    @media (max-width: 767px) {
+      flex-direction: column;
+      align-items: center;
+    }
+
     .featured-card {
       background: $brown30;
       border-radius: 20px;
@@ -1165,8 +1408,19 @@ export default {
       align-items: center;
       gap: 1.2rem;
       flex: 1 1 30%;
-      min-width: 240px;
       transition: box-shadow 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+
+      @media (min-width: 992px) {
+        flex: 1;
+        min-height: var(--featured-card-height);
+      }
+      
+      @media (max-width: 767px) {
+        width: 100%;
+        max-width: 400px;
+      }
       img {
         width: 70px;
         height: 70px;
@@ -1182,12 +1436,12 @@ export default {
         .featured-name {
           font-family: 'Integral-CF-Bold', sans-serif;
           color: $cream;
-          font-size: 1.2rem;
+          font-size: 1.5rem;
         }
         .featured-metric {
           color: $red;
           font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-          font-size: 1rem;
+          font-size: 1.25rem;
         }
       }
     }
@@ -1195,6 +1449,13 @@ export default {
       box-shadow: 0 8px 30px $orange;
       transform: scale(1.04);
     }
+  }
+  .leaderboard-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 2rem;
   }
   .leaderboard-link {
     background: $orange;
@@ -1207,6 +1468,8 @@ export default {
     box-shadow: 0 4px 16px $orange;
     cursor: pointer;
     transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
     margin-top: 1rem;
   }
   .leaderboard-link:hover {
@@ -1248,7 +1511,6 @@ export default {
   }
   .featured-profiles {
     padding: 1rem;
-    h3 { font-size: 2.5rem;}
   }
 }
 
@@ -1259,7 +1521,7 @@ export default {
   }
   .featured-list .featured-card {
     flex: 1 1 100%;             // full width each
-    max-width: 400px;           // cap so they donâ€™t get huge
+    max-width: 400px;           // cap so they don't get huge
   }
 }
 @media (max-width: 600px) {
