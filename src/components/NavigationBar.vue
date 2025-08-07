@@ -235,10 +235,10 @@ export default {
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 209, 157, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  height: 70px;
+  height: 85px;
 
   &.navbar-scrolled {
-    height: 60px;
+    height: 65px;
     background: rgba(15, 15, 15, 0.95);
     border-bottom: 1px solid $orange;
     box-shadow: 0 4px 20px rgba(244, 82, 41, 0.15);
@@ -279,10 +279,10 @@ export default {
 
   .brand-text {
     font-family: 'Integral-CF-Bold', sans-serif;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: bold;
     color: $cream;
-    letter-spacing: 2px;
+    letter-spacing: 2.2px;
     text-shadow: 0 0 10px rgba(255, 209, 157, 0.3);
     position: relative;
 
@@ -314,11 +314,12 @@ export default {
     color: $cream;
     text-decoration: none;
     font-family: 'Integral-CF-Regular', sans-serif;
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 500;
     padding: 0.5rem 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
+    letter-spacing: 2px;
 
     .nav-text {
       position: relative;
