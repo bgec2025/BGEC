@@ -511,7 +511,7 @@ h1 {
   padding: 2rem 3rem;
   margin-bottom: 3rem;
   color: $cream;
-  font-family: 'Integral-CF-Regular', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
@@ -533,7 +533,7 @@ h1 {
 
 
 .welcome-text {
-  font-family: 'Integral-CF-Bold', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   font-size: 1.3rem;
   color: $orange;
 }
@@ -607,7 +607,7 @@ h1 {
 
 
 .toggle-buttons button {
-  font-family: 'Integral-CF-Bold', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   font-size: 1.2rem;
   padding: 0.8rem 2.5rem;
   border-radius: 30px;
@@ -648,7 +648,7 @@ table {
   border-collapse: collapse;
   width: 100%;
   min-width: 700px;
-  font-family: 'Integral-CF-Regular', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   color: $cream;
   border-radius: 15px;
   overflow: hidden;
@@ -660,7 +660,7 @@ td {
   padding: 1.2rem 1.5rem;
   text-align: left;
   border-bottom: 1px solid $brown;
-  font-family: 'Integral-CF-Regular', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   color: $cream;
   white-space: nowrap;
   overflow: hidden;
@@ -669,7 +669,7 @@ td {
 
 
 th {
-  font-family: 'Integral-CF-Bold', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   font-weight: 700;
   color: $orange;
   letter-spacing: 1.5px;
@@ -681,7 +681,7 @@ th {
 tr.highlight {
   background: $red;
   color: $cream90;
-  font-family: 'Integral-CF-Bold', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   animation: pulse-red 2s infinite alternate;
 }
 
@@ -725,7 +725,7 @@ tr:hover {
   font-size: 1.1rem;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
   transition: all 0.3s ease-in-out;
-  font-family: 'Integral-CF-Bold', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   font-weight: bold;
   cursor: pointer;
   white-space: nowrap;
@@ -754,7 +754,7 @@ tr:hover {
   border-radius: 15px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
   color: $cream;
-  font-family: 'Integral-CF-Regular', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   font-size: 1.05rem;
   position: relative;
   overflow: hidden;
@@ -807,7 +807,7 @@ tr:hover {
 
 .side-panel-list li strong {
   color: $orange;
-  font-family: 'Integral-CF-Bold', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   margin-right: 0.5rem;
 }
 
@@ -985,7 +985,7 @@ tr:hover {
 
 
 .player-name {
-  font-family: 'Integral-CF-Bold', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   color: $cream;
   font-size: 1.5rem;
   margin-bottom: 0.3rem;
@@ -997,7 +997,7 @@ tr:hover {
 
 
 .player-points {
-  font-family: 'Integral-CF-Regular', sans-serif;
+  font-family: 'Integral-CF', sans-serif;
   color: $orange;
   font-size: 1.2rem;
   font-weight: bold;

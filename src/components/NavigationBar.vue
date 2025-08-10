@@ -291,7 +291,7 @@ export default {
   }
 
   .brand-text {
-    font-family: 'Integral-CF-Bold', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
     font-size: 1.8rem;
     font-weight: bold;
     color: $cream;
@@ -326,7 +326,7 @@ export default {
     position: relative;
     color: $cream;
     text-decoration: none;
-    font-family: 'Integral-CF-Regular', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
     font-size: 1.2rem;
     font-weight: 500;
     padding: 0.5rem 0;
@@ -370,7 +370,7 @@ export default {
     border-radius: 25px;
     padding: 0.75rem 1.5rem;
     color: $cream;
-    font-family: 'Integral-CF-Bold', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
     font-size: 0.9rem;
     font-weight: bold;
     cursor: pointer;
@@ -488,7 +488,7 @@ export default {
     border-bottom: 1px solid rgba(255, 209, 157, 0.1);
 
     .mobile-brand {
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       font-size: 1.25rem;
       color: $cream;
       text-shadow: 0 0 10px rgba(255, 209, 157, 0.3);
@@ -526,7 +526,7 @@ export default {
       padding: 1rem 2rem;
       color: $cream;
       text-decoration: none;
-      font-family: 'Integral-CF-Regular', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       font-size: 1.1rem;
       border-bottom: 1px solid rgba(255, 209, 157, 0.05);
       transition: all 0.3s ease;
@@ -576,7 +576,7 @@ export default {
       border: none;
       border-radius: 25px;
       color: $cream;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       font-size: 1rem;
       font-weight: bold;
       cursor: pointer;

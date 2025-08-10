@@ -7,10 +7,20 @@
       <div class="hero-headline">
         <h1>The Battle Begins!</h1>
         <p class="hero-subtext">Witness the clash of titans as teams battle for glory.</p>
-        <div class="hero-info-box" v-if="!hasEventStarted">
+        <div class="hero-info-box">
+          <div v-if="!hasEventStarted">
+            <div v-if="!userHasParticipated">
           Register here as a particpant to join the competition and showcase your skills!
+            </div>
+            <div v-else>
+              You have already registered, wait for the event to begin
+            </div>
+        </div>
+        <div v-else>
+          Event has begun
         </div>
       </div>
+    </div>
     </section>
 
     <!-- VERSUS OR NO EVENT MESSAGE -->
@@ -373,6 +383,7 @@ export default {
           window.location.href = "/login.html";
         } else {
           const userData = await getUser.fetchUserData(user);
+          userInfo.value = userData;
           userHasParticipated.value = userData.hasParticipated ?? false;
           console.log(userHasParticipated.value);
           userInfo.value = userData;
@@ -433,6 +444,7 @@ export default {
             } else {
               // Remove matches from this day if no longer live
               removeDayMatches(dayName);
+
             }
           }
         });
@@ -1027,30 +1039,31 @@ export default {
 
   h1 {
     font-family: 'Esporte', serif;
-    font-size: 5rem;
+    font-size: 4.5rem;
     color: $orange;
-    letter-spacing: 2.5px;
+    letter-spacing: 7px;
     text-shadow: 0 0 5px $orange;
     margin-bottom: 1rem;
   }
 
   .hero-subtext {
-    font-family: 'Integral-CF-Regular', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
     color: $cream;
     font-size: 1.3rem;
     opacity: 0.85;
     margin-bottom: 0.5rem;
+    padding: 1.5rem;
   }
 
   .hero-info-box {
     margin: 1.5rem auto 0 auto;
     background: $brown30;
     color: $red;
-    font-family: 'Integral-CF-Regular', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
     font-size: 1.3rem;
     border-radius: 16px;
     padding: 1rem 2rem;
-    max-width: 600px;
+    max-width: 700px;
     box-shadow: 0 2px 12px $brown30;
   }
 }
@@ -1070,6 +1083,7 @@ export default {
     flex-direction: column;
     gap: 2rem;
   }
+
 
   .ongoing-matches-title {
     width: 100%;
@@ -1157,6 +1171,7 @@ export default {
       color: $cream;
       margin-bottom: 1rem;
       text-shadow: 0 0 10px $orange;
+      letter-spacing: 7px;
     }
 
     ul {
@@ -1169,7 +1184,7 @@ export default {
       gap: 0.5rem;
 
       li {
-        font-family: 'Integral-CF-Regular', sans-serif;
+        font-family: 'Integral-CF', sans-serif;
         color: $cream80;
         font-size: 1rem;
         margin-bottom: 0.3rem;
@@ -1192,7 +1207,7 @@ export default {
       gap: 1rem;
       font-size: 1rem;
       color: $orange;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       margin-top: 1rem;
 
       span {
@@ -1272,7 +1287,7 @@ export default {
     padding-bottom: 2rem 0;
 
     h2 {
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       color: $dark-red;
       font-size: 2.5rem;
     }
@@ -1301,7 +1316,7 @@ export default {
     padding: 2rem 2.5rem;
     min-width: 0px;
     max-width: 700px;
-    width: 80%;
+    width: 75%;
     margin-bottom: 2rem;
 
     .FormTitle h1 {
@@ -1315,7 +1330,7 @@ export default {
     .personal-info label {
       display: block;
       margin-top: 10px;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       color: $orange;
       font-size: 0.9rem;
       margin-bottom: 0.5rem;
@@ -1331,7 +1346,7 @@ export default {
       border: 1px solid $brown30;
       background: $bg-dark-alt;
       color: $cream;
-      font-family: 'Integral-CF-Regular', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       font-size: 1rem;
       transition: border 0.2s;
     }
@@ -1367,15 +1382,15 @@ export default {
           }
 
           .toggle-hint {
-            font-size: 1.3rem;
-            color: $cream80;
-            font-family: 'Integral-CF-Regular', sans-serif;
-            font-size: 70%;
-            padding-left: 0.3rem;
-            // align vertically:
-            margin: 0;
-          }
 
+              font-size: 1.3rem;
+              color: $cream80;
+              font-family: 'Integral-CF', sans-serif;
+              font-size: 70%;
+              padding-left: 0.3rem;
+              // align vertically:
+              margin: 0;
+              }
           label {
             cursor: pointer;
             display: flex;
@@ -1392,7 +1407,7 @@ export default {
               position: absolute;
               left: 8px;
               top: 7px;
-              font-family: 'Integral-CF-Bold', sans-serif;
+              font-family: 'Integral-CF', sans-serif;
               font-size: 1rem;
               color: $orange;
               transition: left 0.2s, color 0.2s;
@@ -1413,7 +1428,7 @@ export default {
         .join-team-fields {
           display: block;
           margin-top: 10px;
-          font-family: 'Integral-CF-Bold', sans-serif;
+          font-family: 'Integral-CF', sans-serif;
           color: $orange;
           font-size: 0.9rem;
           margin-bottom: 1rem;
@@ -1431,7 +1446,7 @@ export default {
           border: 1px solid $brown30;
           background: $bg-dark-alt;
           color: $cream;
-          font-family: 'Integral-CF-Regular', sans-serif;
+          font-family: 'Integral-CF', sans-serif;
           font-size: 1rem;
           transition: border 0.2s;
 
@@ -1453,7 +1468,7 @@ export default {
       button {
         background: $orange;
         color: $bg-dark;
-        font-family: 'Integral-CF-Bold', sans-serif;
+        font-family: 'Integral-CF', sans-serif;
         border-radius: 15px;
         padding: 0.8rem 2rem;
         font-size: 1.1rem;
@@ -1477,7 +1492,7 @@ export default {
     }
 
     .status-message {
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       text-align: center;
       margin-top: 1rem;
     }
@@ -1947,7 +1962,7 @@ export default {
   h3 {
     font-family: 'Esporte', serif;
     color: $dark-red;
-    font-size: 3.5rem;
+    font-size: 4rem;
     margin-bottom: 3.5rem;
     text-align: center;
   }
@@ -2010,15 +2025,16 @@ export default {
         gap: 0.3rem;
 
         .featured-name {
-          font-family: 'Integral-CF-Bold', sans-serif;
+          font-family: 'Integral-CF', sans-serif;
           color: $cream;
           font-size: 1.5rem;
+          margin-bottom: 8px;
         }
 
         .featured-metric {
           color: $red;
-          font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-          font-size: 1.25rem;
+          font-family: 'Integral-CF', Arial, sans-serif;
+          font-size: 0.9rem;
         }
       }
     }
@@ -2040,7 +2056,7 @@ export default {
   .leaderboard-link {
     background: $orange;
     color: $bg-dark;
-    font-family: 'Integral-CF-Bold', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
     border-radius: 20px;
     padding: 0.8rem 2rem;
     font-size: 1.1rem;
@@ -2140,5 +2156,6 @@ export default {
   .featured-profiles {
     padding: 0.5rem;
   }
+]
 }
 </style>
