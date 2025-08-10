@@ -76,7 +76,7 @@
             <div class="top-player-card" v-for="(player, index) in topThreePlayers" :key="player.id">
               <span class="rank-overlay">{{ index + 1 }}</span>
               <div class="card-content">
-                <img :src="getRandomAvatar(entry.id)" alt="Player Avatar" class="player-avatar" />
+                <img :src="getRandomAvatar(player.id)" alt="Player Avatar" class="player-avatar" />
                 <h4 class="player-name">{{ showTeams ? player.teamName : (player.gameName || player.displayName ||
                   player.userName) }}</h4>
                 <p class="player-points">{{ player.totalPoints.toFixed(2) }} Points</p>
@@ -257,9 +257,9 @@ export default {
     function getRandomAvatar(playerId) {
       if (playerId) {
         const idx = Math.abs(hashCode(playerId)) % 6 + 1; // 6 avatars available
-        return `/public/assets/avatars/avatar${idx}.jpg`;
+        return `/assets/avatars/avatar${idx}.jpg`;
       }
-      return '/public/assets/avatars/avatar1.jpg'; // fallback
+      return '/assets/avatars/avatar1.jpg'; // fallback
     }
 
     // Simple hash function for string to integer
