@@ -1,44 +1,44 @@
 //-------------------FONTS------------------------
 
- //1) ESPORTE
+//1) ESPORTE
 @font-face {
-    font-family : 'Esporte';
-    src: url('/public/assets/fonts/Esporte\ Personal\ Use\ Only.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-    font-family: 'Esporte', serif;
+  font-family: 'Esporte';
+  src: url('/public/assets/fonts/Esporte Personal Use Only.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
+
 
 //2) INTEGRAL CF REGULAR
 @font-face {
-    font-family : 'Integral-CF-Regular';
-    src: url('/public/assets/fonts/Fontspring-DEMO-integralcf-regular.otf') format('opentype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-    font-family: 'Integral-CF', sans-serif;
+  font-family: 'Integral-CF-Regular';
+  src: url('/public/assets/fonts/Fontspring-DEMO-integralcf-regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  font-family: 'Integral-CF', sans-serif;
 }
 
 //3) INTEGRAL CF BOLD
 @font-face {
-    font-family : 'Integral-CF-Bold';
-    src: url('/public/assets/fonts/Fontspring-DEMO-integralcf-bold.otf') format('opentype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-    font-family: 'Integral-CF', sans-serif;
+  font-family: 'Integral-CF-Bold';
+  src: url('/public/assets/fonts/Fontspring-DEMO-integralcf-bold.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  font-family: 'Integral-CF', sans-serif;
 
 }
 
 //4) ELECTROHARMONIX
 @font-face {
-    font-family : 'Electroharmonix';
-    src: url('/public/assets/fonts/Electroharmonix.otf') format('opentype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-    font-family: 'Electroharmonix', sans-serif;
+  font-family: 'Electroharmonix';
+  src: url('/public/assets/fonts/Electroharmonix.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  font-family: 'Electroharmonix', sans-serif;
 }
 
 .fonts-loading {
@@ -56,17 +56,17 @@ $brown: #340307;
 $brown30: rgba(52, 3, 7, 0.3); // 30% opacity
 
 $dark-red: #8E1D22;
-$red:#C40817;
+$red: #C40817;
 $orange: #F15229;
 $cream: #FFD19D;
 $cream20: rgba(255, 209, 157, 0.20); // 20% opacity
 $cream90: rgba(255, 209, 157, 0.9); // 20% opacity
 $cream80: rgba(255, 209, 157, 0.8); // 20% opacity
+$cream70: rgba(255, 209, 157, 0.7); // 20% opacity
 
 $light-brown: #947153;
 $light-brown10: rgba(148, 113, 83, 0.1); // 10% opacity version of $light-brown
 
 
-$bg-dark: #0F0F0F;        
+$bg-dark: #0F0F0F;
 $bg-dark-alt: #2A2A2A;
-
