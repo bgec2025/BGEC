@@ -3,7 +3,7 @@
  //1) ESPORTE
 @font-face {
     font-family : 'Esporte';
-    src: url('/public/assets/fonts/Esporte\ Personal\ Use\ Only.ttf') format('truetype');
+    src: url('/public/assets/fonts/Vampire\ Wars.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -12,23 +12,13 @@
 
 //2) INTEGRAL CF REGULAR
 @font-face {
-    font-family : 'Integral-CF-Regular';
-    src: url('/public/assets/fonts/Fontspring-DEMO-integralcf-regular.otf') format('opentype');
+    font-family : 'Integral-CF';
+    src: url('/public/assets/fonts/PressStart2P.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
     font-family: 'Integral-CF', sans-serif;
-}
-
-//3) INTEGRAL CF BOLD
-@font-face {
-    font-family : 'Integral-CF-Bold';
-    src: url('/public/assets/fonts/Fontspring-DEMO-integralcf-bold.otf') format('opentype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-    font-family: 'Integral-CF', sans-serif;
-
+    
 }
 
 //4) ELECTROHARMONIX

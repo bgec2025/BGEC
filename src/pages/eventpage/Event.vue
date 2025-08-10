@@ -1,7 +1,6 @@
 <template>
   <div class="event-page">
     <NavigationBar />
-    <h1>Event Schedule</h1>
     <div class="userInfoDisplay">
       <div v-if="loadingUserInfo">
         Loading...
@@ -31,10 +30,10 @@
             <div class="TeamsInfo">
               <div class="match-col teamA">{{ match.teamAName }}</div>
               <!-- Center VS + teamBName -->
-              <div class="match-col vs-center">
+              <div class="vs-center">
                 <span class="vs-text">VS</span>
-                <span class="teamB">{{ match.teamBName }}</span>
-              </div>
+                </div>
+                <div class="match-col teamB">{{ match.teamBName }}</div>
             </div>
             <!-- Right: time on top, status below -->
             <div class="match-col time-status">
@@ -496,7 +495,7 @@ export default {
 @import "@/assets/styles/global.scss";
 
 .event-page {
-  font-family: 'Integral-CF-Regular', sans-serif;
+  //font-family: 'Integral-CF', sans-serif;
   color: $cream90;
   background: linear-gradient(135deg, $bg-dark 80%, $brown 100%);
   min-height: 100vh;
@@ -505,17 +504,17 @@ export default {
   h1 {
     font-family: 'Electroharmonix', sans-serif;
     text-align: center;
-    font-size: 2.4rem;
+    font-size: 4rem;
     letter-spacing: 2px;
     color: $orange;
-    text-shadow: 0 0 10px $red, 0 0 18px $orange;
+    text-shadow: 0 0 5px $red;
     margin-top: 2.3rem;
     margin-bottom: 1.1rem;
     padding: 0;
   }
 
   .userInfoDisplay {
-    max-width: 470px;
+    max-width: 600px;
     margin: 2rem auto 2.3rem auto;
     background: linear-gradient(90deg, $brown30 0 60%, transparent 100%);
     border-radius: 13px;
@@ -528,6 +527,7 @@ export default {
     border: 2px solid $brown;
     overflow: hidden;
     backdrop-filter: blur(2.8px);
+    font-family: 'Integral-CF';
 
     p {
       margin: 0.3rem 0 !important; // Smaller, but consistent gap between lines
@@ -565,7 +565,7 @@ export default {
     .event-day .fixture-table .match-row .vs,
     .event-day .fixture-table .match-row .time,
     .event-day .fixture-table .match-row .matchStatus {
-      font-family: 'Esporte', serif !important;
+      font-family: 'Integral-CF', serif ;
     }
 
     .schedule-header {
@@ -602,9 +602,7 @@ export default {
       flex-direction: column;
       align-items: center;
       background: linear-gradient(120deg, $bg-dark-alt 90%, $brown30 100%);
-      border: 1.5px solid $red;
       border-radius: 10px;
-      box-shadow: 0 1.2px 10px $red;
       padding: 2rem 1.5rem 1rem 1.5rem;
 
       h2 {
@@ -624,8 +622,7 @@ export default {
         background: $brown30;
         border-radius: 10px;
         margin-bottom: 1rem;
-        border: 1px solid $red;
-        box-shadow: 0 0 4px $brown, 0 0 4.7px $red inset;
+        box-shadow: 0 0 4px $brown, 0 0 4.7px;
         /* Remove flex rules from here */
         gap: 0 0;
         /* No gap between columns/rows */
@@ -634,17 +631,20 @@ export default {
           display: flex;
           flex-direction: column;
           justify-content: center;
+          font-family: 'Esporte';
+          letter-spacing: 5px;
         }
 
         .teamA {
           flex: 1.7;
           font-family: 'Esporte', serif;
-          font-size: 2rem;
+          font-size: 1.8rem;
           font-weight: bold;
           color: $cream90;
           align-items: flex-start;
           justify-content: center;
           text-align: left;
+          letter-spacing: 5px;
         }
 
         .vs-center {
@@ -654,9 +654,8 @@ export default {
           align-items: center;
           gap: 0.45rem;
           justify-content: center;
-
           .vs-text {
-            font-family: 'Esporte', serif;
+            font-family: 'Electroharmonix', serif ;
             color: $red;
             font-weight: bold;
             letter-spacing: 1.1px;
@@ -664,10 +663,12 @@ export default {
           }
 
           .teamB {
-            font-family: 'Esporte', serif;
+            font-family: 'Esporte', serif !important;
             font-weight: bold;
             color: $cream90;
-            font-size: 2rem;
+            font-size: 1.8rem;
+            letter-spacing: 5px;
+            
           }
         }
 
@@ -740,9 +741,9 @@ export default {
           align-items: center;
           gap: 1rem;
           white-space: nowrap;
-          font-size: 3rem;
           font-weight: 600;
           color: $cream90;
+          font-size: 1.8rem;
         }
 
       }
@@ -807,7 +808,7 @@ export default {
       display: flex;
       flex-direction: column;
       gap: 0.55rem;
-      font-family: 'Integral-CF-Regular', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       color: $cream80;
 
       label {
