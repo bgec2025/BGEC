@@ -2156,6 +2156,6 @@ export default {
   .featured-profiles {
     padding: 0.5rem;
   }
-]
+
 }
 </style>
