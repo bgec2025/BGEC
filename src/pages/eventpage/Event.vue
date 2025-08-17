@@ -522,7 +522,7 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem; // More space between content blocks
+    gap: 2rem; // More space between content blocks
     padding: 2rem 1.5rem 2rem 1.5rem; // More padding overall
     border: 2px solid $brown;
     overflow: hidden;
