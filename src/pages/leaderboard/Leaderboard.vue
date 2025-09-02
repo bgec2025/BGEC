@@ -442,10 +442,11 @@ body,
   margin: 0;
   padding: 0;
   width: 100vw;
-  min-height: 100vh;
+  min-height: auto;
   overflow-x: hidden;
   box-sizing: border-box;
   background: $bg-dark;
+  margin: 0 auto;
 }
 
 
@@ -462,7 +463,7 @@ body,
 .leaderboard {
   width: 100vw;
   /* Explicitly full viewport width */
-  min-height: 100vh;
+  min-height: auto;
   background: $bg-dark;
   color: $cream;
   display: flex;
@@ -491,7 +492,7 @@ body,
 h1 {
   font-family: 'Esporte', serif;
   color: $orange;
-  font-size: 3.5rem;
+  font-size: 4.5rem;
   margin-bottom: 2.5rem;
   text-align: center;
   width: 100%;
@@ -755,7 +756,7 @@ tr:hover {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
   color: $cream;
   font-family: 'Integral-CF', sans-serif;
-  font-size: 1.05rem;
+  font-size: 1rem;
   position: relative;
   overflow: hidden;
   z-index: 1;
@@ -814,13 +815,15 @@ tr:hover {
 
 /* Event Not Started Message */
 .event-not-started {
-  width: 100%;
+  width: 90%;
+  margin: 0 auto;
   text-align: center;
   padding: 5rem 0;
   background: $bg-dark-alt;
   border-radius: 15px;
   margin-top: 3rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  margin-bottom: 13rem;
 }
 
 
@@ -1093,7 +1096,7 @@ tr:hover {
 
 
   .email-text {
-    font-size: 0.85rem;
+    font-size: 0.2rem;
   }
 
 
@@ -1191,16 +1194,30 @@ tr:hover {
   }
 }
 
-
 @media (max-width: 480px) {
   h1 {
-    font-size: 2.5rem;
+    font-size: 3rem;
+    margin-top: 4rem;
   }
+  .leaderboard,
+  #app {
+    min-height: auto;
+    height: auto;
+    overflow-x: visible;
+    padding-bottom: 7rem;
+  }
+
+  .leaderboard,
+  .user-info,
+  .table-section,
+  .top-players-section {
+    margin: 0 auto;
+  }
+  
 
 
   h1,
   .user-info,
-  .toggle-buttons-section,
   .table-section,
   .actions.bottom-actions,
   #info-side-panel-section,
@@ -1209,77 +1226,95 @@ tr:hover {
     padding-right: 1rem;
   }
 
-
   .user-info {
-    padding: 1rem 1.5rem;
-    width: calc(100% - 2rem);
+    padding: 1rem 1rem;
+    margin-bottom: 2rem;
+    width: 90%;
+    box-sizing: border-box;
+    margin-left: auto; // Ensure no shift to the right
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
   }
-
 
   .user-photo {
     height: 50px;
     width: 50px;
   }
-
+  .email-text
+  {
+    font-size: 0.75rem !important;
+  }
 
   .toggle-buttons {
-    gap: 0.8rem;
+    flex-direction: row; // Make buttons side by side
+    gap: 0.5rem;
+    justify-content: center;
+    width: 100%;
   }
-
 
   .toggle-buttons button {
-    font-size: 1rem;
-    padding: 0.5rem 1.5rem;
-    width: 95%;
+    font-size: 0.65rem; // Smaller font
+    padding: 0.5rem 0.8rem; // Smaller button
+    min-width: 100px;
+    max-width: 50vw;
+    width: auto;
+    margin: 0;
   }
 
+
+  table {
+    font-size: 0.5rem;
+    table-layout: fixed;
+    min-width: unset;
+    width: 100%;
+  }
 
   th,
   td {
-    padding: 0.8rem 0.8rem;
-    font-size: 0.8rem;
+    padding: 0.5rem 0.2rem;
+    font-size: 0.7rem;
   }
-
+th:nth-child(1), td:nth-child(1) { width: 15%; padding-left: 0.5rem; }
+th:nth-child(2), td:nth-child(2) { width: 45%; }
+th:nth-child(3), td:nth-child(3) { width: 40%; }
 
   .table-container {
     min-width: unset;
+    max-width: 100%;
   }
-
 
   .actions button {
     padding: 0.6rem 1.5rem;
     font-size: 0.9rem;
   }
 
-
   .side-panel {
     padding: 1.2rem 1.5rem;
     font-size: 0.9rem;
   }
 
-
   .side-panel-title {
     font-size: 1.5rem;
   }
 
-
   .event-message {
     font-size: 1.2rem;
   }
-
 
   .section-title {
     font-size: 2rem;
     margin-bottom: 1.5rem;
   }
 
-
   .top-players-carousel-wrapper {
-    flex-direction: column;
-    gap: 0.8rem;
-    padding: 0;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 5rem;
   }
-
 
   .carousel-nav-btn {
     width: 35px;
@@ -1287,29 +1322,23 @@ tr:hover {
     font-size: 1rem;
   }
 
-
-
-
-
   .rank-overlay {
     font-size: 3.5rem;
     top: -15px;
   }
-
 
   .player-avatar {
     width: 60px;
     height: 60px;
   }
 
-
   .player-name {
     font-size: 1.1rem;
   }
-
 
   .player-points {
     font-size: 0.9rem;
   }
 }
-</style>
+</style>  
+

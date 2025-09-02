@@ -1039,7 +1039,7 @@ export default {
 
   h1 {
     font-family: 'Esporte', serif;
-    font-size: 4.5rem;
+    font-size: 4.3rem;
     color: $orange;
     letter-spacing: 7px;
     text-shadow: 0 0 5px $orange;
@@ -1049,7 +1049,7 @@ export default {
   .hero-subtext {
     font-family: 'Integral-CF', sans-serif;
     color: $cream;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     opacity: 0.85;
     margin-bottom: 0.5rem;
     padding: 1.5rem;
@@ -1060,7 +1060,7 @@ export default {
     background: $brown30;
     color: $red;
     font-family: 'Integral-CF', sans-serif;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     border-radius: 16px;
     padding: 1rem 2rem;
     max-width: 700px;
@@ -1383,10 +1383,10 @@ export default {
 
           .toggle-hint {
 
-              font-size: 1.3rem;
+              font-size: 1.6rem;
               color: $cream80;
               font-family: 'Integral-CF', sans-serif;
-              font-size: 70%;
+              font-size: 0.8rem;
               padding-left: 0.3rem;
               // align vertically:
               margin: 0;
@@ -1396,7 +1396,7 @@ export default {
             display: flex;
             align-items: center;
             position: relative;
-            width: 200px;
+            width: 250px;
             height: 36px;
             background: $cream20;
             border-radius: 18px;
@@ -1405,10 +1405,11 @@ export default {
 
             span {
               position: absolute;
-              left: 8px;
-              top: 7px;
+              left: 15px;
+              top: 11px;
               font-family: 'Integral-CF', sans-serif;
               font-size: 1rem;
+              align-self: center;
               color: $orange;
               transition: left 0.2s, color 0.2s;
             }
@@ -1427,18 +1428,18 @@ export default {
         .create-team-fields,
         .join-team-fields {
           display: block;
-          margin-top: 10px;
+          margin-top: 30px;
           font-family: 'Integral-CF', sans-serif;
           color: $orange;
           font-size: 0.9rem;
-          margin-bottom: 1rem;
+          margin-bottom: 2rem;
         }
 
         .create-team-fields input,
         .join-team-fields input,
         .create-team-fields textarea,
         .join-team-fields textarea {
-          margin-bottom: 10px;
+          margin-bottom: 20px;
           width: 90%;
           height: 35px;
           padding: 10px;
