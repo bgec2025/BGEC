@@ -88,8 +88,8 @@
 
             <label for="bitsID">Enter your BITS ID</label>
             <input type="text" id="bitsID" v-model="participationData.bitsID" required
-              pattern="^20\\d{2}[A-Za-z]\\d[A-Za-z]{2}\\d{4}[A-Za-z]$"
-              title="Format: 20XXA1BB1234C (e.g., 2021A3BC1234D)" />
+              pattern="^(20\d{2}[A-Za-z]{1,4}\d{0,2}PS\d{4}[A-Za-z]|20\d{2}[A-Za-z]\d[A-Za-z]{2}\d{4}[A-Za-z])$"
+              title="Format: 20XXA1BB1234D or 2024AAPS0481G, 2022AAA5PS2564G, 2022A8A5PS2564G, 2022AAAGPS2564G" />
             <span v-if="userIdError" class="error">{{ userIdError }}</span>
 
             <label for="Tell">Enter a "Tell"</label>
@@ -780,9 +780,15 @@ export default {
     }
 
     function validateUserID() {
-      const regex = /^20\\d{2}[A-Za-z]\\d[A-Za-z]{2}\\d{4}[A-Za-z]$/;
+      // Accepts:
+      // - 20XXA1BB1234D
+      // - 2024AAPS0481G
+      // - 2022AAA5PS2564G
+      // - 2022A8A5PS2564G
+      // - 2022AAAGPS2564G
+      const regex = /^(20\d{2}[A-Za-z]{1,4}\d{0,2}PS\d{4}[A-Za-z]|20\d{2}[A-ZaZ]\d[A-Za-z]{2}\d{4}[A-Za-z])$/;
       if (!regex.test(participationData.value.bitsID)) {
-        userIdError.value = 'Invalid ID format. Example: 2021A3BC1234D';
+        userIdError.value = 'Invalid ID format. Example: 2021A3BC1234D, 2024AAPS0481G, 2022AAA5PS2564G, 2022A8A5PS2564G, 2022AAAGPS2564G';
         return false;
       }
       userIdError.value = '';
@@ -1591,22 +1597,9 @@ export default {
 
     .member-name {
       color: $cream;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
       font-size: 1.15rem;
       margin-bottom: 0.1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.3em;
-    }
-
-    .leader-badge {
-      background: $orange;
-      color: $bg-dark;
-      border-radius: 10px;
-      font-size: 0.88rem;
-      margin-left: 0.5em;
-      padding: 0.05em 0.55em;
-      font-weight: 600;
     }
 
     .member-bitsid,
@@ -1906,7 +1899,7 @@ export default {
 
       .member-name {
         color: $cream;
-        font-family: 'Integral-CF-Bold', sans-serif;
+        font-family: 'Integral-CF', sans-serif;
         font-size: 1.15rem;
         margin-bottom: 0.1rem;
       }
