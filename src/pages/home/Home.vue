@@ -88,8 +88,8 @@
 
             <label for="bitsID">Enter your BITS ID</label>
             <input type="text" id="bitsID" v-model="participationData.bitsID" required
-              pattern="^(20\d{2}[A-Za-z]{1,4}\d{0,2}PS\d{4}[A-Za-z]|20\d{2}[A-Za-z]\d[A-Za-z]{2}\d{4}[A-Za-z])$"
-              title="Format: 20XXA1BB1234D or 2024AAPS0481G, 2022AAA5PS2564G, 2022A8A5PS2564G, 2022AAAGPS2564G" />
+              pattern="^(20\d{2}[A-Za-z][A-Za-z0-9][A-ZaZ]{2}\d{4}[A-ZaZ]|20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-ZaZ]{2}\d{4}[A-ZaZ])$"
+              title="Format: 20XXA1BB1234D, 2024AAPS0481G, 2022AAA5PS2564G, 2022A8A5PS2564G, 2022AAAGPS2564G" />
             <span v-if="userIdError" class="error">{{ userIdError }}</span>
 
             <label for="Tell">Enter a "Tell"</label>
@@ -111,6 +111,15 @@
                 <input v-model="participationData.teamName" type="text" required />
                 <label>Team Slogan:</label>
                 <input v-model="participationData.teamSlogan" type="text" required />
+                <label>Leader Phone Number:</label>
+                <input
+                  v-model="participationData.leaderPhone"
+                  type="text"
+                  required
+                  pattern="^(\+91[\-\s]?)?[0]?(91)?[6-9]\d{9}$"
+                  title="Enter a valid Indian mobile number (with or without +91, spaces, or leading zero)"
+                />
+                <div class="error" v-if="phoneError">{{ phoneError }}</div>
                 <div class="team-id-display">
                   <strong>Your Team ID:</strong> {{ participationData.teamId }}
                 </div>
@@ -304,6 +313,7 @@ export default {
     const newTeamId = ref('');
     const teamMembers = ref([]);
     const membersScroll = ref(null);
+    const phoneError = ref("");
     const participationData = ref({
       gameName: "",
       bitsID: "",
@@ -311,6 +321,7 @@ export default {
       teamId: "",
       teamName: "",
       teamSlogan: "",
+      leaderPhone: "",
     });
 
     const teamLeaderId = computed(() => {
@@ -675,9 +686,22 @@ export default {
 
 
     // Registration logic
+    /* eslint-disable */
+    function validatePhone() {
+      // Accepts: +91XXXXXXXXXX, 91XXXXXXXXXX, 0XXXXXXXXXX, XXXXXXXXXX, with optional spaces/hyphens
+      const regex = /^(\+91[\-\s]?)?[0]?(91)?[6-9]\d{9}$/;
+      if (teamOptIn.value && !regex.test(participationData.value.leaderPhone)) {
+        phoneError.value = "Enter a valid Indian mobile number (with or without +91, spaces, or leading zero)";
+        return false;
+      }
+      phoneError.value = "";
+      return true;
+    }
+
     async function submitParticipation() {
       if (isSubmitting.value) return;
       if (!validateUserID()) return;
+      if (teamOptIn.value && !validatePhone()) return;
       isSubmitting.value = true;
       teamJoinError.value = '';
       try {
@@ -705,6 +729,7 @@ export default {
         teamName: participationData.value.teamName,
         teamSlogan: participationData.value.teamSlogan,
         creatorUid: user.uid,
+        leaderPhone: participationData.value.leaderPhone,
         members: [user.uid],
         maxMembers: 4,
         createdAt: new Date(),
@@ -781,12 +806,9 @@ export default {
 
     function validateUserID() {
       // Accepts:
-      // - 20XXA1BB1234D
-      // - 2024AAPS0481G
-      // - 2022AAA5PS2564G
-      // - 2022A8A5PS2564G
-      // - 2022AAAGPS2564G
-      const regex = /^(20\d{2}[A-Za-z]{1,4}\d{0,2}PS\d{4}[A-Za-z]|20\d{2}[A-ZaZ]\d[A-Za-z]{2}\d{4}[A-Za-z])$/;
+      // 1) 20XXA1BB1234D
+      // 2) 2024AAPS0481G, 2022AAA5PS2564G, 2022A8A5PS2564G, 2022AAAGPS2564G
+      const regex = /^(20\d{2}[A-Za-z][A-ZaZ0-9][A-ZaZ]{2}\d{4}[A-ZaZ]|20\d{2}[A-Za-z][A-ZaZ0-9][A-ZaZ][A-ZaZ0-9][A-ZaZ]{2}\d{4}[A-ZaZ])$/;
       if (!regex.test(participationData.value.bitsID)) {
         userIdError.value = 'Invalid ID format. Example: 2021A3BC1234D, 2024AAPS0481G, 2022AAA5PS2564G, 2022A8A5PS2564G, 2022AAAGPS2564G';
         return false;
@@ -984,8 +1006,8 @@ export default {
       getRandomAvatar,
       teamLeaderId,
       scrollMembers,
-      membersScroll
-
+      membersScroll,
+      phoneError
     };
   }
 };
@@ -1777,7 +1799,7 @@ export default {
           border-radius: 8px;
           border: none;
           padding: 0.45em 1.2em;
-          font-family: 'Integral-CF-Bold', sans-serif;
+          font-family: 'Integral-CF', sans-serif;
           font-size: 0.98rem;
           transition: all 0.15s;
           cursor: pointer;
