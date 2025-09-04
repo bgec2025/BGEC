@@ -55,7 +55,7 @@
       <div id="info-side-panel-section">
         <div v-if="selectedEntry" class="side-panel">
           <div class="side-panel-bg"></div>
-          <h3 class="side-panel-title">Details for {{ showTeams ? selectedEntry.teamName : selectedEntry.userName ||
+          <h3 class="side-panel-title">Details {{ showTeams ? selectedEntry.teamName : selectedEntry.userName ||
             selectedEntry.displayName || selectedEntry.gameName }}</h3>
 
 
