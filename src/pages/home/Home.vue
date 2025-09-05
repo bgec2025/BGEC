@@ -134,6 +134,25 @@
         </form>
       </div>
     </section>
+    <div v-if="!userHasParticipated && !hasEventStarted" class="guidelines-section">
+        <div class="guidelines-card">
+          <h2 class="guidelines-title">Guidelines</h2>
+          <div class="guidelines-content">
+            <h3 class="guidelines-subtitle">For Joining a Team</h3>
+            <ul>
+              <li>Enter the Team ID given to you by your team leader</li>
+              <li>Wait for your team leader to accept/decline your request.</li>
+              <li>Once registered, you will be a player in this tournament</li>
+            </ul>
+            <h3 class="guidelines-subtitle">For Creating a new Team</h3>
+            <ul>
+              <li>Enter your team name and the slogan for your team.</li>
+              <li>Save the Team ID provided to you and share it with your teammates.</li>
+              <li>You will have the option to accept/decline team-join requests.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
 
 
@@ -143,9 +162,6 @@
       <!-- TEAM CARD: Show if user is in a team -->
       <div v-if="teamMembers.length > 0" class="team-card-container">
         <div class="team-card">
-          <div class="welcomeText">
-            <h1>Welcome, {{ userInfo.gameName }}</h1>
-          </div>
           <div class="team-header">
             <h2>{{ userInfo.teamName || 'Your Team' }}</h2>
             <div class="team-details">
@@ -157,7 +173,6 @@
           <div class="members-section">
             <h3>Members</h3>
             <div class="members-scroll-wrapper">
-              <button class="scroll-btn left" @click="scrollMembers(-1)" aria-label="Scroll left">‹</button>
               <div class="members-list horizontal-scroll" ref="membersScroll">
                 <div class="member-card" v-for="member in teamMembers" :key="member.id"
                   :class="{ 'team-leader': member.id === teamLeaderId }">
@@ -172,7 +187,6 @@
                   </div>
                 </div>
               </div>
-              <button class="scroll-btn right" @click="scrollMembers(1)" aria-label="Scroll right">›</button>
             </div>
           </div>
         </div>
@@ -988,11 +1002,15 @@ export default {
 <style scoped lang="scss">
 @import "@/assets/styles/global.scss";
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
 
 .home-page {
   background: $bg-dark;
   color: $cream;
-  padding-bottom: 20rem;
+  padding-bottom: 10rem;
   overflow-x: hidden;
 
 
@@ -1304,7 +1322,61 @@ export default {
     }
   }
 }
+.guidelines-section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+}
 
+.guidelines-card {
+  background: linear-gradient(120deg, $bg-dark-alt 0%, $cream20 100%);
+  border-radius: 24px;
+  box-shadow: 0 4px 18px $orange;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  max-width: 700px;
+  width: 75%;
+  color: $cream;
+  font-family: 'Integral-CF', sans-serif;
+}
+
+.guidelines-title {
+  font-family: 'Esporte', serif;
+  color: $orange;
+  font-size: 3.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  letter-spacing: 2px;
+}
+
+.guidelines-content {
+  width: 100%;
+}
+
+.guidelines-subtitle {
+  color: $red;
+  font-size: 1.3rem;
+  margin-top: 1.2rem;
+  margin-bottom: 0.7rem;
+  text-align: left;
+  font-family: 'Integral-CF-Bold', sans-serif;
+}
+
+.guidelines-card ul {
+  margin-left: 1.2rem;
+  margin-bottom: 1.2rem;
+  padding-left: 0.5rem;
+}
+
+.guidelines-card li {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: $cream90;
+  list-style: disc;
+  line-height: 1.5;
+}
 // FORM SECTION
 .submit-form {
   width: 100%;
@@ -1527,16 +1599,17 @@ export default {
   display: flex;
   justify-content: center;
   margin: 2rem auto;
+  margin-bottom: 10%;
 }
 
 .team-card {
   background: $bg-dark-alt;
-  border: 2px solid $orange;
+  border: 2px solid $light-brown10 ;
   border-radius: 24px;
   box-shadow: 0 8px 32px rgba(52, 3, 7, 0.18);
   padding: 2.5rem 2rem 2rem 2rem;
   max-width: 700px;
-  width: 100%;
+  width: 90%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1556,7 +1629,7 @@ export default {
   position: relative;
   width: 100%;
   max-width: 100%;
-  margin-top: 1.2rem;
+  margin-top: 1rem;
 }
 
 .horizontal-scroll {
@@ -1573,6 +1646,7 @@ export default {
   border-radius: 16px;
   padding: 1.2rem 1rem;
   display: flex;
+  margin-top: 1rem;
   flex-direction: column;
   align-items: center;
   min-width: 170px;
@@ -1629,11 +1703,6 @@ export default {
       }
     }
   }
-}
-
-.member-card.team-leader {
-  border: 2px solid $orange;
-  box-shadow: 0 0 16px $orange;
 }
 
 .scroll-btn {
@@ -1846,7 +1915,7 @@ export default {
   h2 {
     color: $orange;
     font-family: 'Esporte', serif;
-    font-size: 2.5rem;
+    font-size: 3rem;
     margin-bottom: 0.3rem;
   }
 
@@ -1854,10 +1923,12 @@ export default {
     .team-info-line {
       color: $cream;
       margin: 0.2rem auto;
+      margin-top: 2rem;
 
       strong {
         color: $red;
         margin-right: 0.4rem;
+        font-size: 1.5rem;
       }
     }
   }
@@ -1866,14 +1937,15 @@ export default {
 .members-section {
   width: 100%;
   margin-top: 1.2rem;
+  //padding-top: 2rem;
 
   h3 {
     color: $cream80;
     text-align: center;
     margin-bottom: 1rem;
-    font-size: 1.2rem;
-    letter-spacing: 1.5px;
-    font-family: 'Integral-CF-Bold', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 2px;
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif
   }
 
   .members-list {
@@ -2244,6 +2316,30 @@ export default {
 
   .no-event-message h2{
     font-size: 1.5rem !important;
+  }
+
+  .guidelines-card {
+    padding: 1.2rem 0.7rem;
+    max-width: 98vw;
+    width: 98vw;
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+    margin-bottom: 6rem;
+  }
+  .guidelines-title {
+    font-size: 2rem;
+    margin-bottom: 1.2rem;
+  }
+  .guidelines-subtitle {
+    font-size: 1.3  rem;
+    margin-top: 0.8rem;
+    margin-bottom: 0.5rem;
+    text-align: left;
+  }
+  .guidelines-card li {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.5;
   }
 }
 </style>
