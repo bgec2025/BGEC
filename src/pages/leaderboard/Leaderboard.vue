@@ -4,12 +4,7 @@
     <h1>LeaderBoard</h1>
 
 
-    <div v-if="userInfo" class="user-info">
-      <p class="welcome-text">Welcome, {{ userInfo.displayName }}</p>
-      <img :src="userInfo.photoURL" alt="User Photo" referrerpolicy="no-referrer" class="user-photo" />
-      <p class="email-text">Email: {{ userInfo.email }}</p>
-    </div>
-
+  
 
     <section v-if="isEventLive" id="leaderboard-content">
       <div class="toggle-buttons-section">

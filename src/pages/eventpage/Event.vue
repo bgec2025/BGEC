@@ -1,19 +1,7 @@
 <template>
   <div class="event-page">
     <NavigationBar />
-    <div class="userInfoDisplay">
-      <div v-if="loadingUserInfo">
-        Loading...
-      </div>
-      <div v-else-if="loadingUserInfoError">
-        Error Occurred: {{ loadingUserInfoError.value }}
-      </div>
-      <div v-else-if="userInfo && !loadingUserInfo">
-        <p>Hello there, {{ userInfo.displayName }}</p>
-        <img :src="userInfo.photoURL" alt="user photo" referrerpolicy="no-referrer" />
-        <p>Email: {{ userInfo.email }}</p>
-      </div>
-    </div>
+    
 
     <section class="eventsShow">
       <div v-if="!isEventLive">
@@ -21,7 +9,11 @@
       </div>
       <div v-else>
         <div>
-          <h1>Event Schedule</h1>
+          <h1 class="event-schedule-title">
+            <span class="event-title">Event</span>
+            <br />
+            <span class="schedule-title">Schedule</span>
+          </h1>
         </div>
         <div v-for="day in eventDays" :key="day.date" class="event-day">
           <h2>{{ formatDate(day.date) }}</h2>
@@ -546,6 +538,23 @@ export default {
       margin: 1rem auto 0.5rem auto;
       display: block;
     }
+
+    @media (max-width: 600px) {
+      max-width: 98vw;
+      padding: 1rem 0.8rem;
+      font-size: 0.95rem;
+      img {
+        width: 44px;
+        height: 44px;
+        margin: 0.7rem auto 0.3rem auto;
+      }
+      p {
+        font-size: 0.92rem;
+        padding-left: 0.2rem;
+        padding-right: 0.2rem;
+        word-break: break-word;
+      }
+    }
   }
 
 
@@ -606,97 +615,109 @@ export default {
       padding: 2rem 1.5rem 1rem 1.5rem;
 
       h2 {
-        text-align: center; // Center the date
+        text-align: center;
+        font-size: 2.1rem;
+        @media (max-width: 600px) {
+          font-size: 1.15rem;
+          margin-bottom: 0.5rem;
+        }
       }
 
       .match-row {
+        // Remove grid and flex rules
         width: 75vw;
         padding-top: 1rem;
         padding-left: 1rem;
         padding-right: 1rem;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        grid-template-rows: auto auto;
-        align-items: center;
-        min-height: 100px;
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        justify-content: space-between;
+        min-height: 80px;
         background: $brown30;
         border-radius: 10px;
         margin-bottom: 1rem;
         box-shadow: 0 0 4px $brown, 0 0 4.7px;
-        /* Remove flex rules from here */
-        gap: 0 0;
-        /* No gap between columns/rows */
+        padding: 1.2rem 1.2rem; // Increased padding for card content
+        @media (max-width: 600px) {
+          flex-direction: row;
+          min-height: 60px;
+          padding: 0.7rem 0.7rem; // More padding for mobile
+        }
 
-        .match-col {
+        .TeamsInfo {
           display: flex;
           flex-direction: column;
-          justify-content: center;
-          font-family: 'Esporte';
-          letter-spacing: 5px;
-        }
-
-        .teamA {
-          flex: 1.7;
-          font-family: 'Esporte', serif;
-          font-size: 1.8rem;
-          font-weight: bold;
-          color: $cream90;
           align-items: flex-start;
           justify-content: center;
-          text-align: left;
-          letter-spacing: 5px;
-        }
-
-        .vs-center {
-          flex: 2.5;
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          gap: 0.45rem;
-          justify-content: center;
-          .vs-text {
-            font-family: 'Electroharmonix', serif ;
-            color: $red;
-            font-weight: bold;
-            letter-spacing: 1.1px;
-            font-size: 1.25rem;
+          flex: 2;
+          min-width: 0;
+          gap: 0.2rem;
+          @media (max-width: 600px) {
+            flex: 2;
+            gap: 0.1rem;
           }
-
-          .teamB {
-            font-family: 'Esporte', serif !important;
+          .teamA, .teamB {
+            font-family: 'Esporte', serif;
+            font-size: 1.3rem;
             font-weight: bold;
             color: $cream90;
-            font-size: 1.8rem;
-            letter-spacing: 5px;
-            
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            @media (max-width: 600px) {
+              font-size: 1rem;
+              max-width: 90px;
+            }
+          }
+          .vs-center {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.2rem;
+            .vs-text {
+              font-family: 'Electroharmonix', serif;
+              color: $red;
+              font-weight: bold;
+              font-size: 1.1rem;
+              letter-spacing: 1px;
+              white-space: nowrap;
+              @media (max-width: 600px) {
+                font-size: 0.95rem;
+              }
+            }
           }
         }
 
-        .time-status {
-          grid-column: 2/3;
-          grid-row: 1/2;
-          justify-self: end;
-          align-self: start;
+        .match-col.time-status {
           display: flex;
           flex-direction: column;
           align-items: flex-end;
+          justify-content: center;
+          flex: 1;
+          min-width: 0;
           gap: 0.2rem;
-          min-width: 90px;
-
+          @media (max-width: 600px) {
+            align-items: flex-end;
+            gap: 0.1rem;
+          }
           .time {
-            font-size: 1.6rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: $orange;
-            margin: 0 0 0.3rem 0;
+            margin-bottom: 0.1rem;
             text-align: right;
-            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 80px;
+            @media (max-width: 600px) {
+              font-size: 0.95rem;
+              max-width: 60px;
+            }
           }
-
           .matchStatus {
-            grid-column: 2/3;
-            grid-row: 2/3;
-            justify-self: end;
-            align-self: start;
             display: inline-block;
             padding: 0.4rem 1.2rem;
             border-radius: 10px;
@@ -704,9 +725,16 @@ export default {
             font-size: 1rem;
             box-sizing: border-box;
             margin: 0;
-            /* No additional margin needed */
             text-align: right;
-
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px; // Increased for 15+ letters
+            @media (max-width: 600px) {
+              font-size: 0.85rem;
+              padding: 0.15rem 0.5rem;
+              max-width: 160px; // Mobile: still enough for 15 letters
+            }
             &.status,
             &.ongoing {
               background: linear-gradient(90deg, #f15229 70%, #c40817 100%);
@@ -715,14 +743,12 @@ export default {
               box-shadow: 0 0 8px $orange;
               animation: blinklive 1.1s infinite alternate;
             }
-
             &.result {
               background: $brown;
               color: $orange;
               border: 2px solid $orange;
               font-weight: 700;
             }
-
             &.upcoming {
               background: $brown30;
               color: $cream90;
@@ -730,38 +756,7 @@ export default {
             }
           }
         }
-
-        .TeamsInfo {
-          grid-column: 1/2;
-          grid-row: 1/2;
-          justify-self: start;
-          align-self: start;
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          gap: 1rem;
-          white-space: nowrap;
-          font-weight: 600;
-          color: $cream90;
-          font-size: 1.8rem;
-        }
-
       }
-    }
-
-
-    .no-live-message {
-      margin: 4.5vh 0 0 0;
-      font-size: 1.34rem;
-      text-align: center;
-      color: $red;
-      font-family: 'Electroharmonix', sans-serif;
-      text-shadow: 0 0 9px $red, 0 0 20px $orange;
-      border-radius: 9px;
-      padding: 1.1rem 0.5rem;
-      border: 2.1px dashed $orange;
-      background: $brown30;
-      backdrop-filter: blur(2px);
     }
   }
 
@@ -853,7 +848,64 @@ export default {
       }
     }
   }
-}
+
+  .event-schedule-title {
+    display: block;
+    text-align: center;
+    margin-bottom: 1.1rem;
+    padding: auto;
+    width: 100%;
+    line-height: 0.5em; // Reduce line-height to decrease gap
+    font-family: 'Electroharmonix', sans-serif;
+  }
+
+  .event-title,
+  .schedule-title {
+    display: block;
+    width: 100%;
+    text-align: center;
+    color: $orange;
+    text-shadow: 0 0 5px $red;
+    letter-spacing: 2px;
+  }
+
+  .event-title {
+    font-size: 4rem;
+  }
+
+  .schedule-title {
+    font-size: 3.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .event-title {
+      font-size: 2.8rem;
+      
+    }
+    .schedule-title {
+      font-size: 2.3rem;
+    }
+  }
+
+//   @media (max-width: 600px) {
+//     .event-schedule-title {
+      
+      
+//       padding-left: 0.5rem;
+//       padding-right: 0.5rem;
+//       line-height: 1.05; // Keep reduced line-height for mobile
+//     }
+//     .event-title {
+//       font-size: 1.7rem;
+//       letter-spacing: 0.5px;
+      
+//     }
+//     .schedule-title {
+//       font-size: 1.5rem;
+//       letter-spacing: 0.5px;
+//     }
+//   }
+// }
 
 @keyframes blinklive {
   0% {
@@ -911,4 +963,108 @@ nav {
 .event-page>.navbar {
   margin-bottom: 2rem;
 }
+
+@media (max-width: 600px) {
+  .event-page {
+    padding-bottom: 2vh;
+    width: 100vw;
+    min-height: 100vh;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-top: 0.7rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px; // Reduce letter spacing so word stays together
+    text-shadow: 0 0 3px $red;
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    overflow-wrap: normal;
+    word-break: normal; // Prevent breaking in the middle of words
+    white-space: normal; // Allow normal wrapping
+    line-height: 1.1;
+  }
+
+  .eventsShow {
+    width: 100vw;
+    padding: 1rem 0 0.5rem 0;
+    gap: 1.2rem;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+
+  .event-day {
+    width: 100vw;
+    max-width: 100vw;
+    box-sizing: border-box;
+    padding: 0.7rem 0.5rem 0.3rem 0.5rem;
+    overflow-x: auto;
+
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
+      padding-left: 0.2rem;
+      padding-right: 0.2rem;
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+    .match-row {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      padding: 0.7rem 0.7rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: space-between;
+      overflow-x: auto;
+    }
+  }
+
+  .EventSettings {
+    max-width: 98vw;
+    padding: 0.7rem 0.3rem;
+    button {
+      font-size: 0.95rem;
+      padding: 0.5rem 0.8rem;
+    }
+    form {
+      gap: 0.3rem;
+      label {
+        font-size: 0.95rem;
+        input {
+          font-size: 0.95rem;
+          padding: 0.3rem;
+        }
+      }
+      .submit-section {
+        margin-top: 0.2rem;
+      }
+      .stat-update-message {
+        font-size: 0.95rem;
+      }
+    }
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-top: 0.7rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px; // Reduce letter spacing so word stays together
+    text-shadow: 0 0 3px $red;
+  }
+
+  // Fix overflow for all sections
+  .event-page, .eventsShow, .event-day, .match-row {
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+}}
 </style>
