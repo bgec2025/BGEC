@@ -10,7 +10,7 @@
         <div class="hero-info-box">
           <div v-if="!hasEventStarted">
             <div v-if="!userHasParticipated">
-          Register here as a particpant to join the competition and showcase your skills!
+          Register here as a particpant to join the competition!
             </div>
             <div v-else>
               You have already registered, wait for the event to begin
@@ -88,8 +88,10 @@
 
             <label for="bitsID">Enter your BITS ID</label>
             <input type="text" id="bitsID" v-model="participationData.bitsID" required
-              pattern="^(20\d{2}[A-Za-z][A-Za-z0-9][A-ZaZ]{2}\d{4}[A-ZaZ]|20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-ZaZ]{2}\d{4}[A-ZaZ])$"
-              title="Format: 20XXA1BB1234D, 2024AAPS0481G, 2022AAA5PS2564G, 2022A8A5PS2564G, 2022AAAGPS2564G" />
+
+              pattern="^20\d{2}[A-Z][A-Z0-9][A-Z][A-Z0-9]\d{4}[A-Z]$"
+              title="Format: 20XXA1BB1234C (e.g., 2021A3BC1234D)" />
+
             <span v-if="userIdError" class="error">{{ userIdError }}</span>
 
             <label for="Tell">Enter a "Tell"</label>
@@ -143,6 +145,25 @@
         </form>
       </div>
     </section>
+    <div v-if="!userHasParticipated && !hasEventStarted" class="guidelines-section">
+        <div class="guidelines-card">
+          <h2 class="guidelines-title">Guidelines</h2>
+          <div class="guidelines-content">
+            <h3 class="guidelines-subtitle">For Joining a Team</h3>
+            <ul>
+              <li>Enter the Team ID given to you by your team leader</li>
+              <li>Wait for your team leader to accept/decline your request.</li>
+              <li>Once registered, you will be a player in this tournament</li>
+            </ul>
+            <h3 class="guidelines-subtitle">For Creating a new Team</h3>
+            <ul>
+              <li>Enter your team name and the slogan for your team.</li>
+              <li>Save the Team ID provided to you and share it with your teammates.</li>
+              <li>You will have the option to accept/decline team-join requests.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
 
 
@@ -152,9 +173,6 @@
       <!-- TEAM CARD: Show if user is in a team -->
       <div v-if="teamMembers.length > 0" class="team-card-container">
         <div class="team-card">
-          <div class="welcomeText">
-            <h1>Welcome, {{ userInfo.gameName }}</h1>
-          </div>
           <div class="team-header">
             <h2>{{ userInfo.teamName || 'Your Team' }}</h2>
             <div class="team-details">
@@ -166,7 +184,6 @@
           <div class="members-section">
             <h3>Members</h3>
             <div class="members-scroll-wrapper">
-              <button class="scroll-btn left" @click="scrollMembers(-1)" aria-label="Scroll left">‹</button>
               <div class="members-list horizontal-scroll" ref="membersScroll">
                 <div class="member-card" v-for="member in teamMembers" :key="member.id"
                   :class="{ 'team-leader': member.id === teamLeaderId }">
@@ -181,7 +198,6 @@
                   </div>
                 </div>
               </div>
-              <button class="scroll-btn right" @click="scrollMembers(1)" aria-label="Scroll right">›</button>
             </div>
           </div>
         </div>
@@ -805,12 +821,10 @@ export default {
     }
 
     function validateUserID() {
-      // Accepts:
-      // 1) 20XXA1BB1234D
-      // 2) 2024AAPS0481G, 2022AAA5PS2564G, 2022A8A5PS2564G, 2022AAAGPS2564G
-      const regex = /^(20\d{2}[A-Za-z][A-ZaZ0-9][A-ZaZ]{2}\d{4}[A-ZaZ]|20\d{2}[A-Za-z][A-ZaZ0-9][A-ZaZ][A-ZaZ0-9][A-ZaZ]{2}\d{4}[A-ZaZ])$/;
+
+      const regex = /^20\d{2}[A-Z][A-Z0-9][A-Z][A-Z0-9]\d{4}[A-Z]$/;
       if (!regex.test(participationData.value.bitsID)) {
-        userIdError.value = 'Invalid ID format. Example: 2021A3BC1234D, 2024AAPS0481G, 2022AAA5PS2564G, 2022A8A5PS2564G, 2022AAAGPS2564G';
+        userIdError.value = 'Invalid ID format. Example: 2021A3BC1234G';
         return false;
       }
       userIdError.value = '';
@@ -1016,11 +1030,15 @@ export default {
 <style scoped lang="scss">
 @import "@/assets/styles/global.scss";
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
 
 .home-page {
   background: $bg-dark;
   color: $cream;
-  padding-bottom: 4rem;
+  padding-bottom: 10rem;
   overflow-x: hidden;
 
 
@@ -1038,7 +1056,7 @@ export default {
   font-size: 2rem;
   color: $orange;
   text-align: center;
-  margin-bottom: 1.2rem;
+ // margin-bottom: 1rem;
   font-family: 'Integral-CF-Bold', sans-serif;
 }
 
@@ -1067,20 +1085,21 @@ export default {
 
   h1 {
     font-family: 'Esporte', serif;
-    font-size: 4.5rem;
+    font-size: 4.3rem;
     color: $orange;
     letter-spacing: 7px;
-    text-shadow: 0 0 5px $orange;
+    text-shadow: 0 0 3px $orange;
     margin-bottom: 1rem;
   }
 
   .hero-subtext {
     font-family: 'Integral-CF', sans-serif;
     color: $cream;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     opacity: 0.85;
     margin-bottom: 0.5rem;
     padding: 1.5rem;
+    line-height: 1.5; 
   }
 
   .hero-info-box {
@@ -1088,11 +1107,12 @@ export default {
     background: $brown30;
     color: $red;
     font-family: 'Integral-CF', sans-serif;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     border-radius: 16px;
     padding: 1rem 2rem;
     max-width: 700px;
     box-shadow: 0 2px 12px $brown30;
+    line-height: 1.5;
   }
 }
 
@@ -1120,6 +1140,7 @@ export default {
     color: $cream;
     font-size: 3.5rem;
     margin: 0 auto 2rem auto;
+    margin-bottom: 0;
     text-transform: uppercase;
     letter-spacing: 2.5px;
     padding-bottom: 0.5rem;
@@ -1142,21 +1163,23 @@ export default {
     flex-direction: column;
     align-items: center;
     position: relative;
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
 
     &.match-divider:not(:last-child)::after {
       content: '';
-      margin-top: 1.5rem;
+      margin-top: 2rem;
+      padding-top: 0.1rem;
       position: absolute;
-      bottom: -1.5rem;
+      margin-bottom: -2rem;
       left: 50%;
       transform: translateX(-50%);
       width: 85%;
-      max-width: 900px;
+      max-width: 1000px;
       height: 5px;
       background: linear-gradient(90deg, transparent, $orange, transparent);
-      opacity: 0.8;
+      opacity: 0.85;
+      bottom: 0;
     }
   }
 
@@ -1327,7 +1350,61 @@ export default {
     }
   }
 }
+.guidelines-section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+}
 
+.guidelines-card {
+  background: linear-gradient(120deg, $bg-dark-alt 0%, $cream20 100%);
+  border-radius: 24px;
+  box-shadow: 0 4px 18px $orange;
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  max-width: 700px;
+  width: 75%;
+  color: $cream;
+  font-family: 'Integral-CF', sans-serif;
+}
+
+.guidelines-title {
+  font-family: 'Esporte', serif;
+  color: $orange;
+  font-size: 3.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  letter-spacing: 2px;
+}
+
+.guidelines-content {
+  width: 100%;
+}
+
+.guidelines-subtitle {
+  color: $red;
+  font-size: 1.3rem;
+  margin-top: 1.2rem;
+  margin-bottom: 0.7rem;
+  text-align: left;
+  font-family: 'Integral-CF-Bold', sans-serif;
+}
+
+.guidelines-card ul {
+  margin-left: 1.2rem;
+  margin-bottom: 1.2rem;
+  padding-left: 0.5rem;
+}
+
+.guidelines-card li {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: $cream90;
+  list-style: disc;
+  line-height: 1.5;
+}
 // FORM SECTION
 .submit-form {
   width: 100%;
@@ -1341,11 +1418,11 @@ export default {
     background: linear-gradient(120deg, $bg-dark-alt 0%, $cream20 100%);
     border-radius: 30px;
     box-shadow: 0 8px 30px rgba(52, 3, 7, 0.18);
-    padding: 2rem 2.5rem;
+    padding: 2rem 3rem;
     min-width: 0px;
     max-width: 700px;
     width: 75%;
-    margin-bottom: 2rem;
+    margin-bottom: 5rem; 
 
     .FormTitle h1 {
       font-family: 'Esporte', serif;
@@ -1404,6 +1481,7 @@ export default {
           display: flex;
           align-items: center;
           margin-bottom: 1rem;
+         // margin-left: 0.7rem;
 
           input[type="checkbox"] {
             display: none;
@@ -1411,10 +1489,10 @@ export default {
 
           .toggle-hint {
 
-              font-size: 1.3rem;
+              font-size: 1.6rem;
               color: $cream80;
               font-family: 'Integral-CF', sans-serif;
-              font-size: 70%;
+              font-size: 0.8rem;
               padding-left: 0.3rem;
               // align vertically:
               margin: 0;
@@ -1424,7 +1502,7 @@ export default {
             display: flex;
             align-items: center;
             position: relative;
-            width: 200px;
+            width: 250px;
             height: 36px;
             background: $cream20;
             border-radius: 18px;
@@ -1433,10 +1511,11 @@ export default {
 
             span {
               position: absolute;
-              left: 8px;
-              top: 7px;
+              left: 15px;
+              top: 11px;
               font-family: 'Integral-CF', sans-serif;
               font-size: 1rem;
+              align-self: center;
               color: $orange;
               transition: left 0.2s, color 0.2s;
             }
@@ -1455,18 +1534,19 @@ export default {
         .create-team-fields,
         .join-team-fields {
           display: block;
-          margin-top: 10px;
+          margin-top: 30px;
           font-family: 'Integral-CF', sans-serif;
           color: $orange;
           font-size: 0.9rem;
-          margin-bottom: 1rem;
+          margin-bottom: 2rem;
+          line-height: 1.3;
         }
 
         .create-team-fields input,
         .join-team-fields input,
         .create-team-fields textarea,
         .join-team-fields textarea {
-          margin-bottom: 10px;
+          margin-bottom: 20px;
           width: 90%;
           height: 35px;
           padding: 10px;
@@ -1485,6 +1565,7 @@ export default {
           color: $cream90;
           margin-top: 0.8rem;
           display: block;
+          line-height: 1.3 ;
         }
       }
     }
@@ -1546,16 +1627,17 @@ export default {
   display: flex;
   justify-content: center;
   margin: 2rem auto;
+  margin-bottom: 10%;
 }
 
 .team-card {
   background: $bg-dark-alt;
-  border: 2px solid $orange;
+  border: 2px solid $light-brown10 ;
   border-radius: 24px;
   box-shadow: 0 8px 32px rgba(52, 3, 7, 0.18);
   padding: 2.5rem 2rem 2rem 2rem;
   max-width: 700px;
-  width: 100%;
+  width: 90%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1575,7 +1657,7 @@ export default {
   position: relative;
   width: 100%;
   max-width: 100%;
-  margin-top: 1.2rem;
+  margin-top: 1rem;
 }
 
 .horizontal-scroll {
@@ -1592,6 +1674,7 @@ export default {
   border-radius: 16px;
   padding: 1.2rem 1rem;
   display: flex;
+  margin-top: 1rem;
   flex-direction: column;
   align-items: center;
   min-width: 170px;
@@ -1637,11 +1720,6 @@ export default {
   }
 }
 
-.member-card.team-leader {
-  border: 2px solid $orange;
-  box-shadow: 0 0 16px $orange;
-}
-
 .scroll-btn {
   background: $brown30;
   color: $orange;
@@ -1670,10 +1748,10 @@ export default {
   margin: 2rem auto;
   padding: 1.2rem 2rem;
   background: $bg-dark-alt;
-  border: 2px solid $orange;
+  border: 2px solid $cream20;
   border-radius: 20px;
-  max-width: 440px;
-  box-shadow: 0 6px 20px $orange;
+  max-width: 300px;
+  //box-shadow: 0 6px 20px $orange;
   text-align: center;
 
   h2 {
@@ -1692,14 +1770,17 @@ export default {
 
     &.pending {
       color: $orange;
+      font-family: 'Integral-CF-Bold', sans-serif;
     }
 
     &.accepted {
       color: #2ecc40;
+      font-family: 'Integral-CF-Bold', sans-serif;
     }
 
     &.rejected {
       color: $red;
+      font-family: 'Integral-CF-Bold', sans-serif;
     }
 
     .status {
@@ -1734,6 +1815,7 @@ export default {
     justify-content: center;
     align-items: center;
     margin-top: 1.2em;
+    flex-direction: column;
 
     input {
       border: 1px solid $orange;
@@ -1848,7 +1930,7 @@ export default {
   h2 {
     color: $orange;
     font-family: 'Esporte', serif;
-    font-size: 2.5rem;
+    font-size: 3rem;
     margin-bottom: 0.3rem;
   }
 
@@ -1856,10 +1938,12 @@ export default {
     .team-info-line {
       color: $cream;
       margin: 0.2rem auto;
+      margin-top: 2rem;
 
       strong {
         color: $red;
         margin-right: 0.4rem;
+        font-size: 1.5rem;
       }
     }
   }
@@ -1868,14 +1952,15 @@ export default {
 .members-section {
   width: 100%;
   margin-top: 1.2rem;
+  //padding-top: 2rem;
 
   h3 {
     color: $cream80;
     text-align: center;
     margin-bottom: 1rem;
-    font-size: 1.2rem;
-    letter-spacing: 1.5px;
-    font-family: 'Integral-CF-Bold', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 2px;
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif
   }
 
   .members-list {
@@ -1937,17 +2022,6 @@ export default {
         }
       }
     }
-  }
-}
-
-/* Responsive tweaks */
-@media (max-width: 800px) {
-  .team-card {
-    padding: 1.5rem 0.7rem;
-  }
-
-  .members-list {
-    gap: 0.8rem;
   }
 }
 
@@ -2064,7 +2138,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
+    width: 95%;
     margin-top: 2rem;
   }
 
@@ -2074,7 +2148,7 @@ export default {
     font-family: 'Integral-CF', sans-serif;
     border-radius: 20px;
     padding: 0.8rem 2rem;
-    font-size: 1.1rem;
+    font-size: 1rem;
     border: none;
     box-shadow: 0 4px 16px $orange;
     cursor: pointer;
@@ -2157,20 +2231,130 @@ export default {
 
 @media (max-width: 600px) {
   .hero-headline h1 {
-    font-size: 2.5rem;
+    font-size: 2.9rem;
+  }
+  .hero-subtext {
+    font-size: 0.9rem !important;
   }
 
   .live-match-spotlight {
     flex-direction: column;
   }
 
+  .hero-info-box{
+    margin-right: 1.5rem !important;
+    margin-left: 1.5rem !important;
+    font-size: 1rem !important;
+  }
+
+  .participation-form{
+    margin-left: 1rem !important;
+    margin-right: 1rem !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    box-sizing: border-box;
+  }
+
   .team {
     padding: 0.7rem;
+    h2 {
+      font-size: 1.6rem !important;
+    }
+  }
+
+  .team-stats {
+    align-items: center;
+    align-self: center;
+  }
+
+  .ongoing-matches-title
+  {
+    font-size: 3rem !important;
   }
 
   .featured-profiles {
     padding: 0.5rem;
+    margin-bottom: 15rem !important;
+    h3{
+      font-size: 2.3rem !important;
+    }
+  }
+  .featured-name{
+    font-size: 1.2rem !important;
+  }
+  .featured-list {
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+}
+.featured-card {
+  width: 70vw !important;
+  max-width: 70vw !important;
+  min-width: 0 !important;
+}
+
+.leaderboard-button-container
+{
+  margin-bottom: 1.5rem;
+}
+
+.FormTitle h1{
+  font-size: 2.2rem !important;
   }
 
+  
+  .team-formation-unit {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+   // margin-left: 1rem !important;
+    margin-right: 1rem !important;
+    //padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    box-sizing: border-box;
+  }
+  .personal-info input,
+    .personal-info textarea{
+      font-size: 0.8rem !important;
+      width: 90% !important;
+      max-width: 90% !important;
+    }
+
+    .toggle-switch{
+      width:  350px !important;
+    }
+    .team-formation-unit .toggle-switch label span {
+    font-size: 0.6rem !important;
+  }
+
+  .no-event-message h2{
+    font-size: 1.5rem !important;
+  }
+
+  .guidelines-card {
+    padding: 1.2rem 0.7rem;
+    max-width: 98vw;
+    width: 98vw;
+    margin-left: 1.5rem;
+    margin-right: 1.5rem;
+    margin-bottom: 6rem;
+  }
+  .guidelines-title {
+    font-size: 2rem;
+    margin-bottom: 1.2rem;
+  }
+  .guidelines-subtitle {
+    font-size: 1.3  rem;
+    margin-top: 0.8rem;
+    margin-bottom: 0.5rem;
+    text-align: left;
+  }
+  .guidelines-card li {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.5;
+  }
 }
 </style>

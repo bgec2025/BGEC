@@ -4,7 +4,7 @@
       <!-- Logo and Brand -->
       <div class="navbar-brand" ref="brand">
         <img src="../assets/images/logo.png" alt="Logo" class="navbar-logo" />
-        <span class="brand-text">WreckHavoc</span>
+        <span class="brand-text">BITS Goa Esports Club</span>
       </div>
 
       <!-- Desktop Navigation -->
@@ -40,7 +40,7 @@
       <div v-if="isMobileMenuOpen" class="mobile-menu-overlay" @click="closeMobileMenu">
         <div class="mobile-menu" @click.stop ref="mobileMenu">
           <div class="mobile-menu-header">
-            <span class="mobile-brand">WreckHavoc</span>
+            <span class="mobile-brand">BGEC</span>
             <button class="mobile-close" @click="closeMobileMenu">
               <span>&times;</span>
             </button>
@@ -248,6 +248,8 @@ export default {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 2rem;
+    padding-left: 0.1rem;
+    padding-right: 0.05rem;
     height: 100%;
     display: flex;
     align-items: center;
@@ -272,7 +274,7 @@ export default {
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.8rem;
   cursor: pointer;
   transition: transform 0.3s ease;
 
@@ -292,7 +294,7 @@ export default {
 
   .brand-text {
     font-family: 'Integral-CF', sans-serif;
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: bold;
     color: $cream;
     letter-spacing: 2.2px;
@@ -327,7 +329,7 @@ export default {
     color: $cream;
     text-decoration: none;
     font-family: 'Integral-CF', sans-serif;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 500;
     padding: 0.5rem 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -656,7 +658,7 @@ export default {
 
   .navbar-brand {
     .brand-text {
-      font-size: 1.1rem;
+      font-size: 0.6rem;
       letter-spacing: 1px;
     }
 
