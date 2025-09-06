@@ -303,7 +303,7 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc,
+  getDoc,// eslint-disable-next-line
   addDoc,
   getDocs,
   collection,
@@ -435,6 +435,9 @@ export default {
 
       // Initialize animations
       initializeAnimations();
+      
+      // Check if user has pending requests and if associated teams are full
+      await checkPendingRequestsForFullTeams();
     });
 
     // ADD these new functions BEFORE the return statement:
@@ -775,6 +778,7 @@ export default {
         return false;
       }
       const teamData = teamDoc.data();
+      
       if (teamData.members.length >= teamData.maxMembers) {
         teamJoinError.value = 'Team is full. Please try another team.';
         return false;
@@ -794,15 +798,34 @@ export default {
         teamJoinError.value = 'You already have a pending request for this team.';
         return false;
       }
-      await addDoc(collection(db, "teamJoinRequests"), {
+      
+      // Get the creator's UID from the team data
+      const creatorUid = teamData.creatorUid;
+      
+      if (!creatorUid) {
+        teamJoinError.value = 'Cannot send request: Team has no leader assigned.';
+        return false;
+      }
+      
+      // Use creatorUid as the document ID for teamJoinRequests
+      await setDoc(doc(db, "teamJoinRequests", creatorUid), {
         teamId: teamId,
         requesterUid: user.uid,
         requesterName: user.displayName,
         requesterEmail: user.email,
+        creatorUid: creatorUid,  // Store the creatorUid for reference
         status: 'pending',
         requestedAt: new Date()
       });
+      
       teamJoinError.value = 'Join request sent! Awaiting team leader approval.';
+      
+      // Reload the window after sending the request
+      setTimeout(() => {
+        //eslint-disable-next-line
+        window.location.reload();
+      }, 1500); // 1.5 second delay so the user can see the success message
+      
       return true;
     }
 
@@ -901,10 +924,38 @@ export default {
 
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
+        const requestDoc = querySnapshot.docs[0];
+        const requestData = requestDoc.data();
+        
         userJoinRequest.value = {
-          id: querySnapshot.docs[0].id,
-          ...querySnapshot.docs[0].data()
+          id: requestDoc.id,
+          ...requestData
         };
+        
+        // If request is pending, check if the team is now full
+        if (requestData.status === "pending") {
+          const teamId = requestData.teamId;
+          const teamDoc = await getDoc(doc(db, "teams", teamId));
+          
+          if (teamDoc.exists()) {
+            const teamData = teamDoc.data();
+            
+            // If team is full, update the request status to rejected
+            if (teamData.members && teamData.members.length >= teamData.maxMembers) {
+              console.log(`Team ${teamId} is full. Rejecting request ${requestDoc.id}`);
+              
+              // Update request status to rejected
+              await updateDoc(doc(db, "teamJoinRequests", requestDoc.id), {
+                status: "rejected",
+                rejectionReason: "Team is full"
+              });
+              
+              // Update local state
+              userJoinRequest.value.status = "rejected";
+              userJoinRequest.value.rejectionReason = "Team is full";
+            }
+          }
+        }
       }
     }
 
@@ -991,6 +1042,53 @@ export default {
       }
       catch (error) {
         console.error("Error submitting new request:", error);
+      }
+    }
+
+    // Function to check if teams with pending requests are full
+    async function checkPendingRequestsForFullTeams() {
+      try {
+        // Only run if user is logged in
+        const user = firebaseApp.auth.currentUser;
+        if (!user) return;
+
+        // Get all pending requests from the current user
+        const pendingRequestsQuery = query(
+          collection(db, "teamJoinRequests"),
+          where("requesterUid", "==", user.uid),
+          where("status", "==", "pending")
+        );
+        
+        const pendingRequestsSnapshot = await getDocs(pendingRequestsQuery);
+        
+        // If there are no pending requests, exit
+        if (pendingRequestsSnapshot.empty) return;
+        
+        // Check each pending request
+        for (const requestDoc of pendingRequestsSnapshot.docs) {
+          const requestData = requestDoc.data();
+          const teamId = requestData.teamId;
+          
+          // Get the team document
+          const teamDoc = await getDoc(doc(db, "teams", teamId));
+          
+          // If team exists and is full, update request status to rejected
+          if (teamDoc.exists()) {
+            const teamData = teamDoc.data();
+            
+            if (teamData.members && teamData.members.length >= teamData.maxMembers) {
+              console.log(`Team ${teamId} is full. Rejecting request ${requestDoc.id}`);
+              
+              // Update request status to rejected
+              await updateDoc(doc(db, "teamJoinRequests", requestDoc.id), {
+                status: "rejected",
+                rejectionReason: "Team is full"
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error checking pending requests for full teams:", error);
       }
     }
 
