@@ -32,7 +32,7 @@
                 <td>{{ idx + 1 }}</td>
                 <td v-if="showTeams">{{ entry.teamName }}</td>
                 <td v-else>{{ entry.gameName || entry.displayName || entry.userName }}</td>
-                <td>{{ entry.totalPoints ? entry.totalPoints.toFixed(2) : '0.00' }}</td>
+                <td>{{ entry.totalPoints ? (entry.totalPoints * 100).toFixed(3) : '0.000' }}</td>
               </tr>
             </tbody>
           </table>
@@ -74,7 +74,7 @@
                 <img :src="getRandomAvatar(player.id)" alt="Player Avatar" class="player-avatar" />
                 <h4 class="player-name">{{ showTeams ? player.teamName : (player.gameName || player.displayName ||
                   player.userName) }}</h4>
-                <p class="player-points">{{ player.totalPoints.toFixed(2) }} Points</p>
+                <p class="player-points">{{ (player.totalPoints * 100).toFixed(3) }} Points</p>
               </div>
             </div>
           </div>
@@ -272,10 +272,10 @@ export default {
       const q = query(collection(db, colName), orderBy('totalPoints', 'desc'));
       const snapshot = await getDocs(q);
       leaderboard.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-
-      console.log("Leaderboard after fetch:", leaderboard.value); // Add this
-      console.log("Top Three Players computed value:", topThreePlayers.value); // And this
+      
+      // No need to modify the totalPoints in the actual data, just display it differently
+      console.log("Leaderboard after fetch:", leaderboard.value);
+      console.log("Top Three Players computed value:", topThreePlayers.value);
 
 
       await nextTick();
@@ -320,10 +320,19 @@ export default {
       return INFO_DISPLAY_ORDER
         .map((key) => {
           if (selectedEntry.value[key] !== undefined && selectedEntry.value[key] !== null) {
+            // Format totalPoints specially
+            let value = selectedEntry.value[key];
+            if (key === 'totalPoints') {
+              value = (value * 100).toFixed(3);
+            } else if (typeof value === 'number') {
+              // Format other numeric values with 3 decimal places for consistency
+              value = value.toFixed(3);
+            }
+            
             return {
               key,
               label: FIELD_LABELS[key] || key,
-              value: selectedEntry.value[key]
+              value: value
             }
           }
         })

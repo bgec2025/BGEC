@@ -1,7 +1,7 @@
 <template>
   <div class="event-page">
     <NavigationBar />
-    
+
 
     <section class="eventsShow">
       <div v-if="!isEventLive">
@@ -24,8 +24,8 @@
               <!-- Center VS + teamBName -->
               <div class="vs-center">
                 <span class="vs-text">VS</span>
-                </div>
-                <div class="match-col teamB">{{ match.teamBName }}</div>
+              </div>
+              <div class="match-col teamB">{{ match.teamBName }}</div>
             </div>
             <!-- Right: time on top, status below -->
             <div class="match-col time-status">
@@ -89,12 +89,7 @@
             <label>Team ID:
               <input v-model="playerStatForm.teamId" required />
             </label>
-            <label>Game Name:
-              <input v-model="playerStatForm.gameName" />
-            </label>
-            <label>User Name:
-              <input v-model="playerStatForm.userName" />
-            </label>
+            <!-- Removed gameName and userName fields -->
             <label>Kills:
               <input type="number" v-model.number="playerStatForm.kills" required />
             </label>
@@ -161,8 +156,6 @@ export default {
     const playerStatForm = ref({
       userId: '',
       teamId: '',
-      gameName: '',
-      userName: '',
       kills: 0,
       deaths: 0,
       highestTeamWinStreak: 0,
@@ -215,6 +208,17 @@ export default {
       days.sort((a, b) => new Date(a.date) - new Date(b.date));
       eventDays.value = days;
     });
+    
+    // Helper function to safely normalize values and prevent division by zero
+    // Moved outside of statUpdateSubmit to make it globally available
+    const safeNormalize = (value, min, max) => {
+      const denominator = max - min;
+      // If min and max are equal, return 1 for the max value and 0 otherwise
+      if (denominator === 0) {
+        return value === max ? 1 : 0;
+      }
+      return (value - min) / denominator;
+    };
 
 
 
@@ -222,28 +226,83 @@ export default {
       isSubmitting.value = true;
       statUpdateMessage.value = '';
       try {
+        console.log("Updating stats...", statTypeTeam.value ? "Team stats" : "Player stats");
+
+        // First, update the team/player stats document
+        if (statTypeTeam.value) {
+          const refStat = doc(db, "teamstats", teamStatForm.value.teamId);
+          console.log("Updating team stats for:", teamStatForm.value.teamId);
+          await updateDoc(refStat, { ...teamStatForm.value });
+          console.log("Team stats updated successfully");
+        } else {
+          const refStat = doc(db, "playerstats", playerStatForm.value.userId);
+          console.log("Updating player stats for:", playerStatForm.value.userId);
+          await updateDoc(refStat, { ...playerStatForm.value });
+          console.log("Player stats updated successfully");
+        }
+
+        // Then update minMaxDoc to ensure we have the latest min/max values
         const minMaxRef = doc(db, "events", "minMaxDoc");
         await minMaxUpdate(minMaxRef, statTypeTeam.value, teamStatForm, playerStatForm);
 
+        // Get updated minMaxDoc after the update
         const minMaxDoc = await getDoc(minMaxRef);
+        if (!minMaxDoc.exists()) {
+          throw new Error("MinMaxDoc still doesn't exist after update attempt");
+        }
         const minMaxDocData = minMaxDoc.data();
+        console.log("Updated minMaxDoc data retrieved:", minMaxDocData);
 
         if (statTypeTeam.value) {
-          // Update team stats
+          // Stats already updated above, now update the rankings
           const refStat = doc(db, "teamstats", teamStatForm.value.teamId);
-          await updateDoc(refStat, { ...teamStatForm.value });
-
           const refRanking = doc(db, "teamRanking", teamStatForm.value.teamId);
           const statData = (await getDoc(refStat)).data();
           const getMembers = statData.members?.length || 0;
 
+          console.log("Updating team ranking for:", teamStatForm.value.teamId);
+
+          // Helper function to safely normalize values and prevent division by zero
+          const safeNormalize = (value, min, max) => {
+            const denominator = max - min;
+            // If min and max are equal, return 1 for the max value and 0 otherwise
+            if (denominator === 0) {
+              return value === max ? 1 : 0;
+            }
+            return (value - min) / denominator;
+          };
+
           await updateDoc(refRanking, {
-            normalizedDeaths: (teamStatForm.value.accumulatedDeaths - minMaxDocData.Team.accumulatedDeaths.min) / (minMaxDocData.Team.accumulatedDeaths.max - minMaxDocData.Team.accumulatedDeaths.min),
-            normalizedKills: (teamStatForm.value.accumulatedKills - minMaxDocData.Team.accumulatedKills.min) / (minMaxDocData.Team.accumulatedKills.max - minMaxDocData.Team.accumulatedKills.min),
-            normalizedCurrentWinStreak: (teamStatForm.value.currentWinStreak - minMaxDocData.Team.currentWinStreak.min) / (minMaxDocData.Team.currentWinStreak.max - minMaxDocData.Team.currentWinStreak.min),
-            normalizedMaxWinStreak: (teamStatForm.value.highestWinStreak - minMaxDocData.Team.highestWinStreak.min) / (minMaxDocData.Team.highestWinStreak.max - minMaxDocData.Team.highestWinStreak.min),
-            normalizedMatchesLost: (teamStatForm.value.matchesLost - minMaxDocData.Team.matchesLost.min) / (minMaxDocData.Team.matchesLost.max - minMaxDocData.Team.matchesLost.min),
-            normalizedMatchesWon: (teamStatForm.value.matchesWon - minMaxDocData.Team.matchesWon.min) / (minMaxDocData.Team.matchesWon.max - minMaxDocData.Team.matchesWon.min),
+            normalizedDeaths: safeNormalize(
+              teamStatForm.value.accumulatedDeaths,
+              minMaxDocData.Team.accumulatedDeaths.min,
+              minMaxDocData.Team.accumulatedDeaths.max
+            ),
+            normalizedKills: safeNormalize(
+              teamStatForm.value.accumulatedKills,
+              minMaxDocData.Team.accumulatedKills.min,
+              minMaxDocData.Team.accumulatedKills.max
+            ),
+            normalizedCurrentWinStreak: safeNormalize(
+              teamStatForm.value.currentWinStreak,
+              minMaxDocData.Team.currentWinStreak.min,
+              minMaxDocData.Team.currentWinStreak.max
+            ),
+            normalizedMaxWinStreak: safeNormalize(
+              teamStatForm.value.highestWinStreak,
+              minMaxDocData.Team.highestWinStreak.min,
+              minMaxDocData.Team.highestWinStreak.max
+            ),
+            normalizedMatchesLost: safeNormalize(
+              teamStatForm.value.matchesLost,
+              minMaxDocData.Team.matchesLost.min,
+              minMaxDocData.Team.matchesLost.max
+            ),
+            normalizedMatchesWon: safeNormalize(
+              teamStatForm.value.matchesWon,
+              minMaxDocData.Team.matchesWon.min,
+              minMaxDocData.Team.matchesWon.max
+            ),
             normalizedNumMembers: (getMembers - 1) / 3
           });
 
@@ -260,25 +319,63 @@ export default {
 
           statUpdateMessage.value = 'Team stats and ranking updated!';
         } else {
-          // Update player stats
-          const refStat = doc(db, "playerstats", playerStatForm.value.userId);
-          await updateDoc(refStat, { ...playerStatForm.value });
+          try {
+            // Stats already updated above, now update the rankings
+            const refRanking = doc(db, "playerRanking", playerStatForm.value.userId);
+            console.log("Updating player ranking for:", playerStatForm.value.userId);
+            
+            // Get the current ranking document or create it if it doesn't exist
+            const rankingDocSnap = await getDoc(refRanking);
+            
+            if (!rankingDocSnap.exists()) {
+              console.log("Player ranking document doesn't exist, creating it");
+              await setDoc(refRanking, {
+                normalizedDeaths: 0,
+                normalizedHighestTeamWinStreak: 0,
+                normalizedKills: 0,
+                normalizedSupportPoints: 0,
+                teamId: playerStatForm.value.teamId,
+                totalPoints: 0
+              });
+            }
+            
+            // Reuse the same safeNormalize helper function for player stats
+            await updateDoc(refRanking, {
+              normalizedKills: safeNormalize(
+                playerStatForm.value.kills,
+                minMaxDocData.Player.kills.min,
+                minMaxDocData.Player.kills.max
+              ),
+              normalizedHighestTeamWinStreak: safeNormalize(
+                playerStatForm.value.highestTeamWinStreak,
+                minMaxDocData.Player.highestTeamWinStreak.min,
+                minMaxDocData.Player.highestTeamWinStreak.max
+              ),
+              normalizedDeaths: safeNormalize(
+                playerStatForm.value.deaths,
+                minMaxDocData.Player.deaths.min,
+                minMaxDocData.Player.deaths.max
+              ),
+              normalizedSupportPoints: safeNormalize(
+                playerStatForm.value.supportPoints,
+                minMaxDocData.Player.supportPoints.min,
+                minMaxDocData.Player.supportPoints.max
+              )
+            });
 
-          const refRanking = doc(db, "playerRanking", playerStatForm.value.userId);
-          await updateDoc(refRanking, {
-            normalizedKills: (playerStatForm.value.kills - minMaxDocData.Player.kills.min) / (minMaxDocData.Player.kills.max - minMaxDocData.Player.kills.min),
-            normalizedHighestTeamWinStreak: (playerStatForm.value.highestTeamWinStreak - minMaxDocData.Player.highestTeamWinStreak.min) / (minMaxDocData.Player.highestTeamWinStreak.max - minMaxDocData.Player.highestTeamWinStreak.min),
-            normalizedDeaths: (playerStatForm.value.deaths - minMaxDocData.Player.deaths.min) / (minMaxDocData.Player.deaths.max - minMaxDocData.Player.deaths.min),
-            noramlizedSupportPoints: (playerStatForm.value.supportPoints - minMaxDocData.Player.supportPoints.min) / (minMaxDocData.Player.supportPoints.max - minMaxDocData.Player.supportPoints.min)
-          });
-
-          const rankingDoc = (await getDoc(refRanking)).data();
-          await updateDoc(refRanking, {
-            totalPoints: 0.4 * rankingDoc.normalizedKills +
-              0.25 * rankingDoc.noramlizedSupportPoints +
-              0.2 * rankingDoc.normalizedHighestTeamWinStreak +
-              0.15 * rankingDoc.normalizedDeaths
-          });
+            // Get updated ranking doc for calculating total points
+            const rankingDoc = (await getDoc(refRanking)).data();
+            await updateDoc(refRanking, {
+              totalPoints: 0.4 * rankingDoc.normalizedKills +
+                0.25 * rankingDoc.normalizedSupportPoints +
+                0.2 * rankingDoc.normalizedHighestTeamWinStreak +
+                0.15 * rankingDoc.normalizedDeaths
+            });
+            console.log("Player ranking updated successfully");
+          } catch (rankingError) {
+            console.error("Error updating player ranking:", rankingError);
+            throw rankingError; // Re-throw to be caught by outer try-catch
+          }
 
           statUpdateMessage.value = 'Player stats and ranking updated!';
         }
@@ -301,66 +398,212 @@ export default {
 
     async function minMaxUpdate(minMaxRefVar, isTeamUpdate, teamStatFormUpdate, playerStatFormUpdate) {
       try {
+        console.log("Starting minMaxUpdate...");
         const docSnap = await getDoc(minMaxRefVar);
+
+        // If the minMaxDoc doesn't exist, create it with initial values
         if (!docSnap.exists()) {
-          console.error("Min/max document does not exist!");
-          return;
+          console.log("Min/max document does not exist! Creating initial document...");
+          // Initialize the minMaxDoc with the current values as both min and max
+          const initialData = {
+            Team: {
+              matchesWon: { min: 0, max: teamStatFormUpdate.value.matchesWon },
+              matchesLost: { min: 0, max: teamStatFormUpdate.value.matchesLost },
+              currentWinStreak: { min: 0, max: teamStatFormUpdate.value.currentWinStreak },
+              highestWinStreak: { min: 0, max: teamStatFormUpdate.value.highestWinStreak },
+              accumulatedKills: { min: 0, max: teamStatFormUpdate.value.accumulatedKills },
+              accumulatedDeaths: { min: 0, max: teamStatFormUpdate.value.accumulatedDeaths }
+            },
+            Player: {
+              kills: { min: 0, max: playerStatFormUpdate.value.kills },
+              deaths: { min: 0, max: playerStatFormUpdate.value.deaths },
+              highestTeamWinStreak: { min: 0, max: playerStatFormUpdate.value.highestTeamWinStreak },
+              supportPoints: { min: 0, max: playerStatFormUpdate.value.supportPoints }
+            }
+          };
+          await setDoc(minMaxRefVar, initialData);
+          console.log("Created initial minMaxDoc:", initialData);
+          // Don't recurse as this could cause stack overflow, just get the doc we just created
+          const newDocSnap = await getDoc(minMaxRefVar);
+          if (!newDocSnap.exists()) {
+            throw new Error("Failed to create minMaxDoc");
+          }
+          const docData = newDocSnap.data();
+          console.log("Newly created minMaxDoc data:", docData);
+          return docData; // Return the data directly
         }
+
+        // The document exists, get its data
         const docData = docSnap.data();
+        console.log("Existing minMaxDoc data:", docData);
 
-        if (isTeamUpdate) {
-          // List of fields to check for Team
-          const fields = [
-            "matchesWon",
-            "matchesLost",
-            "currentWinStreak",
-            "highestWinStreak",
-            "accumulatedKills",
-            "accumulatedDeaths"
-          ];
-          const updates = {};
-          fields.forEach(field => {
-            const currMin = docData.Team[field]?.min ?? teamStatFormUpdate.value[field];
-            const currMax = docData.Team[field]?.max ?? teamStatFormUpdate.value[field];
-            const newVal = teamStatFormUpdate.value[field];
+        // Make sure both Team and Player sections exist in the document
+        if (!docData.Team) {
+          docData.Team = {
+            matchesWon: { min: 0, max: teamStatFormUpdate.value.matchesWon },
+            matchesLost: { min: 0, max: teamStatFormUpdate.value.matchesLost },
+            currentWinStreak: { min: 0, max: teamStatFormUpdate.value.currentWinStreak },
+            highestWinStreak: { min: 0, max: teamStatFormUpdate.value.highestWinStreak },
+            accumulatedKills: { min: 0, max: teamStatFormUpdate.value.accumulatedKills },
+            accumulatedDeaths: { min: 0, max: teamStatFormUpdate.value.accumulatedDeaths }
+          };
+          await setDoc(minMaxRefVar, { Team: docData.Team }, { merge: true });
+          console.log("Created missing Team section in minMaxDoc");
+        }
 
-            if (newVal < currMin) {
-              updates[`Team.${field}.min`] = newVal;
+        if (!docData.Player) {
+          docData.Player = {
+            kills: { min: 0, max: playerStatFormUpdate.value.kills },
+            deaths: { min: 0, max: playerStatFormUpdate.value.deaths },
+            highestTeamWinStreak: { min: 0, max: playerStatFormUpdate.value.highestTeamWinStreak },
+            supportPoints: { min: 0, max: playerStatFormUpdate.value.supportPoints }
+          };
+          await setDoc(minMaxRefVar, { Player: docData.Player }, { merge: true });
+          console.log("Created missing Player section in minMaxDoc");
+        }
+
+        // Always update both Team and Player sections regardless of isTeamUpdate
+        // This ensures we have complete min/max data for both
+        
+        // Define field arrays
+        const teamFields = [
+          "matchesWon",
+          "matchesLost",
+          "currentWinStreak",
+          "highestWinStreak",
+          "accumulatedKills",
+          "accumulatedDeaths"
+        ];
+        
+        const playerFields = [
+          "kills",
+          "deaths",
+          "highestTeamWinStreak",
+          "supportPoints"
+        ];
+        
+        // Create properly structured update objects for Team and Player
+        const updatesTeam = {};
+        const updatesPlayer = {};
+        
+        // Process Team fields
+        teamFields.forEach(field => {
+          const newVal = teamStatFormUpdate.value[field];
+          
+          // Handle case when field doesn't exist
+          if (!docData.Team[field]) {
+            console.log(`Creating missing Team.${field} field in minMaxDoc`);
+            docData.Team[field] = { min: 0, max: newVal };
+            updatesTeam[field] = { min: 0, max: newVal };
+          } else {
+            // Field exists, check if we need to update min/max
+            const currMin = docData.Team[field].min;
+            const currMax = docData.Team[field].max;
+            
+            // Initialize field in updates if needed
+            if (!updatesTeam[field]) {
+              updatesTeam[field] = {};
             }
-            if (newVal > currMax) {
-              updates[`Team.${field}.max`] = newVal;
+            
+            // Check if min needs updating
+            if ((currMin === undefined || currMin === null) || newVal < currMin) {
+              console.log(`Updating Team.${field}.min to ${newVal < currMin ? newVal : 0}`);
+              updatesTeam[field].min = newVal < currMin ? newVal : 0;
             }
-          });
-          if (Object.keys(updates).length > 0) {
-            await setDoc(minMaxRefVar, updates, { merge: true });
+            
+            // Check if max needs updating
+            if ((currMax === undefined || currMax === null) || newVal > currMax) {
+              console.log(`Updating Team.${field}.max to ${newVal > currMax ? newVal : newVal}`);
+              updatesTeam[field].max = newVal > currMax ? newVal : newVal;
+            }
+            
+            // Remove empty objects to avoid unnecessary updates
+            if (Object.keys(updatesTeam[field]).length === 0) {
+              delete updatesTeam[field];
+            }
           }
-        } else {
-          // List of fields to check for Player
-          const fields = [
-            "kills",
-            "deaths",
-            "highestTeamWinStreak",
-            "supportPoints"
-          ];
-          const updates = {};
-          fields.forEach(field => {
-            const currMin = docData.Player[field]?.min ?? playerStatFormUpdate.value[field];
-            const currMax = docData.Player[field]?.max ?? playerStatFormUpdate.value[field];
-            const newVal = playerStatFormUpdate.value[field];
-
-            if (newVal < currMin) {
-              updates[`Player.${field}.min`] = newVal;
+        });
+        
+        // Process Player fields
+        playerFields.forEach(field => {
+          const newVal = playerStatFormUpdate.value[field];
+          
+          // Handle case when field doesn't exist
+          if (!docData.Player[field]) {
+            console.log(`Creating missing Player.${field} field in minMaxDoc`);
+            docData.Player[field] = { min: 0, max: newVal };
+            updatesPlayer[field] = { min: 0, max: newVal };
+          } else {
+            // Field exists, check if we need to update min/max
+            const currMin = docData.Player[field].min;
+            const currMax = docData.Player[field].max;
+            
+            // Initialize field in updates if needed
+            if (!updatesPlayer[field]) {
+              updatesPlayer[field] = {};
             }
-            if (newVal > currMax) {
-              updates[`Player.${field}.max`] = newVal;
+            
+            // Check if min needs updating
+            if ((currMin === undefined || currMin === null) || newVal < currMin) {
+              console.log(`Updating Player.${field}.min to ${newVal < currMin ? newVal : 0}`);
+              updatesPlayer[field].min = newVal < currMin ? newVal : 0;
             }
-          });
-          if (Object.keys(updates).length > 0) {
-            await setDoc(minMaxRefVar, updates, { merge: true });
+            
+            // Check if max needs updating
+            if ((currMax === undefined || currMax === null) || newVal > currMax) {
+              console.log(`Updating Player.${field}.max to ${newVal > currMax ? newVal : newVal}`);
+              updatesPlayer[field].max = newVal > currMax ? newVal : newVal;
+            }
+            
+            // Remove empty objects to avoid unnecessary updates
+            if (Object.keys(updatesPlayer[field]).length === 0) {
+              delete updatesPlayer[field];
+            }
           }
+        });
+        
+        // Combine updates into proper nested structure
+        const updates = {};
+        if (Object.keys(updatesTeam).length > 0) {
+          updates.Team = updatesTeam;
+        }
+        if (Object.keys(updatesPlayer).length > 0) {
+          updates.Player = updatesPlayer;
+        }
+        
+        // Apply updates if there are any
+        if (Object.keys(updates).length > 0) {
+          console.log("Applying updates to minMaxDoc:", updates);
+          await setDoc(minMaxRefVar, updates, { merge: true });
         }
       } catch (error) {
         console.error("Error updating min/max stats:", error);
+
+        // Attempt to create the minMaxDoc as a recovery mechanism if there was an error
+        try {
+          const initialData = {
+            Team: {
+              matchesWon: { min: teamStatFormUpdate.value.matchesWon, max: teamStatFormUpdate.value.matchesWon },
+              matchesLost: { min: teamStatFormUpdate.value.matchesLost, max: teamStatFormUpdate.value.matchesLost },
+              currentWinStreak: { min: teamStatFormUpdate.value.currentWinStreak, max: teamStatFormUpdate.value.currentWinStreak },
+              highestWinStreak: { min: teamStatFormUpdate.value.highestWinStreak, max: teamStatFormUpdate.value.highestWinStreak },
+              accumulatedKills: { min: teamStatFormUpdate.value.accumulatedKills, max: teamStatFormUpdate.value.accumulatedKills },
+              accumulatedDeaths: { min: teamStatFormUpdate.value.accumulatedDeaths, max: teamStatFormUpdate.value.accumulatedDeaths }
+            },
+            Player: {
+              kills: { min: playerStatFormUpdate.value.kills, max: playerStatFormUpdate.value.kills },
+              deaths: { min: playerStatFormUpdate.value.deaths, max: playerStatFormUpdate.value.deaths },
+              highestTeamWinStreak: { min: playerStatFormUpdate.value.highestTeamWinStreak, max: playerStatFormUpdate.value.highestTeamWinStreak },
+              supportPoints: { min: playerStatFormUpdate.value.supportPoints, max: playerStatFormUpdate.value.supportPoints }
+            }
+          };
+          await setDoc(minMaxRefVar, initialData);
+          console.log("Recovery: Created new minMaxDoc after error:", initialData);
+          return initialData;
+        } catch (recoveryError) {
+          console.error("Failed to recover from minMaxUpdate error:", recoveryError);
+          throw error; // Re-throw the original error
+        }
       }
     }
 
@@ -401,12 +644,21 @@ export default {
           const playerRankingRef = doc(db, "playerRanking", memberUid);
 
           const userRef = doc(db, "users", memberUid);
-          const userData = await getDoc(userRef);
+          const userDoc = await getDoc(userRef);
+          
+          // Default values in case user data is missing
+          let gameName = "Player";
+          let displayName = "User";
+          
+          // Check if user document exists and has the required fields
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            gameName = userData.gameName || "Player";
+            displayName = userData.displayName || "User";
+          }
 
           await setDoc(playerStatsRef, {
             teamId: teamId_stat,
-            gameName: userData.data().gameName,
-            userName: userData.data().displayName,
             kills: 0,
             deaths: 0,
             highestTeamWinStreak: 0,
@@ -415,10 +667,9 @@ export default {
 
           await setDoc(playerRankingRef, {
             normalizedDeaths: 0,
-            gameName: userData.data().gameName,
             normalizedHighestTeamWinStreak: 0,
             normalizedKills: 0,
-            noramlizedSupportPoints: 0,
+            normalizedSupportPoints: 0,
             teamId: teamId_stat,
             totalPoints: 0
           });
@@ -427,31 +678,44 @@ export default {
     }
 
     async function updateWinStreak(teamId, newWinStreak) {
-      const teamStatsRef = doc(db, "teamstats", teamId);
-      const teamDocSnap = await getDoc(doc(db, "teams", teamId));
+      try {
+        const teamStatsRef = doc(db, "teamstats", teamId);
+        const teamDocSnap = await getDoc(doc(db, "teams", teamId));
 
-      if (!teamDocSnap.exists()) throw "Team doc does not exist";
-      const members = teamDocSnap.data().members || [];
+        if (!teamDocSnap.exists()) throw "Team doc does not exist";
+        const members = teamDocSnap.data().members || [];
 
-      await runTransaction(db, async (transaction) => {
-        const teamStatsSnap = await transaction.get(teamStatsRef);
-        if (!teamStatsSnap.exists()) throw "Team stats doc does not exist";
-        const data = teamStatsSnap.data();
-        const high = data.highestWinStreak || 0;
-        const newHigh = Math.max(newWinStreak, high);
+        await runTransaction(db, async (transaction) => {
+          const teamStatsSnap = await transaction.get(teamStatsRef);
+          if (!teamStatsSnap.exists()) throw "Team stats doc does not exist";
+          const data = teamStatsSnap.data();
+          const high = data.highestWinStreak || 0;
+          const newHigh = Math.max(newWinStreak, high);
 
-        transaction.update(teamStatsRef, {
-          currentWinStreak: newWinStreak,
-          highestWinStreak: newHigh,
-        });
-
-        for (const memberUid of members) {
-          const playerStatsRef = doc(db, "playerstats", memberUid);
-          transaction.update(playerStatsRef, {
-            highestTeamWinStreak: newHigh,
+          transaction.update(teamStatsRef, {
+            currentWinStreak: newWinStreak,
+            highestWinStreak: newHigh,
           });
-        }
-      });
+
+          for (const memberUid of members) {
+            try {
+              const playerStatsRef = doc(db, "playerstats", memberUid);
+              // Check if document exists before updating
+              const playerStatsSnap = await transaction.get(playerStatsRef);
+              if (playerStatsSnap.exists()) {
+                transaction.update(playerStatsRef, {
+                  highestTeamWinStreak: newHigh,
+                });
+              }
+            } catch (memberError) {
+              console.error(`Error updating player stats for member ${memberUid}:`, memberError);
+              // Continue with other members even if one fails
+            }
+          }
+        });
+      } catch (error) {
+        console.error("Error in updateWinStreak function:", error);
+      }
     }
 
     async function changeEventStatus() {
@@ -543,11 +807,13 @@ export default {
       max-width: 98vw;
       padding: 1rem 0.8rem;
       font-size: 0.95rem;
+
       img {
         width: 44px;
         height: 44px;
         margin: 0.7rem auto 0.3rem auto;
       }
+
       p {
         font-size: 0.92rem;
         padding-left: 0.2rem;
@@ -574,7 +840,7 @@ export default {
     .event-day .fixture-table .match-row .vs,
     .event-day .fixture-table .match-row .time,
     .event-day .fixture-table .match-row .matchStatus {
-      font-family: 'Integral-CF', serif ;
+      font-family: 'Integral-CF', serif;
     }
 
     .schedule-header {
@@ -617,6 +883,7 @@ export default {
       h2 {
         text-align: center;
         font-size: 2.1rem;
+
         @media (max-width: 600px) {
           font-size: 1.15rem;
           margin-bottom: 0.5rem;
@@ -639,6 +906,7 @@ export default {
         margin-bottom: 1rem;
         box-shadow: 0 0 4px $brown, 0 0 4.7px;
         padding: 1.2rem 1.2rem; // Increased padding for card content
+
         @media (max-width: 600px) {
           flex-direction: row;
           min-height: 60px;
@@ -653,11 +921,14 @@ export default {
           flex: 2;
           min-width: 0;
           gap: 0.2rem;
+
           @media (max-width: 600px) {
             flex: 2;
             gap: 0.1rem;
           }
-          .teamA, .teamB {
+
+          .teamA,
+          .teamB {
             font-family: 'Esporte', serif;
             font-size: 1.3rem;
             font-weight: bold;
@@ -666,16 +937,19 @@ export default {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+
             @media (max-width: 600px) {
               font-size: 1rem;
               max-width: 90px;
             }
           }
+
           .vs-center {
             display: flex;
             flex-direction: row;
             align-items: center;
             gap: 0.2rem;
+
             .vs-text {
               font-family: 'Electroharmonix', serif;
               color: $red;
@@ -683,6 +957,7 @@ export default {
               font-size: 1.1rem;
               letter-spacing: 1px;
               white-space: nowrap;
+
               @media (max-width: 600px) {
                 font-size: 0.95rem;
               }
@@ -698,10 +973,12 @@ export default {
           flex: 1;
           min-width: 0;
           gap: 0.2rem;
+
           @media (max-width: 600px) {
             align-items: flex-end;
             gap: 0.1rem;
           }
+
           .time {
             font-size: 1.2rem;
             font-weight: 700;
@@ -712,11 +989,13 @@ export default {
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 80px;
+
             @media (max-width: 600px) {
               font-size: 0.95rem;
               max-width: 60px;
             }
           }
+
           .matchStatus {
             display: inline-block;
             padding: 0.4rem 1.2rem;
@@ -730,11 +1009,13 @@ export default {
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 220px; // Increased for 15+ letters
+
             @media (max-width: 600px) {
               font-size: 0.85rem;
               padding: 0.15rem 0.5rem;
               max-width: 160px; // Mobile: still enough for 15 letters
             }
+
             &.status,
             &.ongoing {
               background: linear-gradient(90deg, #f15229 70%, #c40817 100%);
@@ -743,12 +1024,14 @@ export default {
               box-shadow: 0 0 8px $orange;
               animation: blinklive 1.1s infinite alternate;
             }
+
             &.result {
               background: $brown;
               color: $orange;
               border: 2px solid $orange;
               font-weight: 700;
             }
+
             &.upcoming {
               background: $brown30;
               color: $cream90;
@@ -880,191 +1163,203 @@ export default {
   @media (max-width: 900px) {
     .event-title {
       font-size: 2.8rem;
-      
+
     }
+
     .schedule-title {
       font-size: 2.3rem;
     }
   }
 
-//   @media (max-width: 600px) {
-//     .event-schedule-title {
-      
-      
-//       padding-left: 0.5rem;
-//       padding-right: 0.5rem;
-//       line-height: 1.05; // Keep reduced line-height for mobile
-//     }
-//     .event-title {
-//       font-size: 1.7rem;
-//       letter-spacing: 0.5px;
-      
-//     }
-//     .schedule-title {
-//       font-size: 1.5rem;
-//       letter-spacing: 0.5px;
-//     }
-//   }
-// }
-
-@keyframes blinklive {
-  0% {
-    box-shadow: 0 0 8px $orange, 0 0 12px $red;
-  }
-
-  100% {
-    box-shadow: 0 0 15px $orange, 0 0 18px $red;
-  }
-}
-
-nav {
-  width: 100%;
-  display: block;
-  position: relative;
-  /* or fixed/sticky as per your logic */
-  z-index: 10;
-}
+  //   @media (max-width: 600px) {
+  //     .event-schedule-title {
 
 
+  //       padding-left: 0.5rem;
+  //       padding-right: 0.5rem;
+  //       line-height: 1.05; // Keep reduced line-height for mobile
+  //     }
+  //     .event-title {
+  //       font-size: 1.7rem;
+  //       letter-spacing: 0.5px;
 
-.container {
-  width: 100%;
-  max-width: none; // ✅ remove fixed max-width
-  margin: 0; // ✅ remove centering
-  padding: 0 1rem; // optional, if you still want side spacing
-}
+  //     }
+  //     .schedule-title {
+  //       font-size: 1.5rem;
+  //       letter-spacing: 0.5px;
+  //     }
+  //   }
+  // }
 
-// Make the NavigationBar always stretch full width, and push it to the very top.
-.event-page>.navbar {
-  width: 100vw; // Full viewport width, like leaderboard
-  margin: 0 !important; // No extra margin
-  padding: 0.5rem 2rem; // Same as leaderboard's navbar
-  box-sizing: border-box;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  transform: translate(-50%, 0); // Center it (handles the 100vw inside other boxed elements)
-  z-index: 20;
-  border-radius: 0; // No rounding
-  background: $bg-dark; // Or whatever you use
-  // Optional: add .navbar-specific box-shadow, etc as in leaderboard
-}
-
-// Remove any "auto/max-width" limits or margin-top
-.event-page {
-  margin: 0;
-  padding: 0;
-  width: 100vw; // Ensure parent fills viewport horizontally
-  min-height: 100vh; // Optional, for full screen
-
-}
-
-// If you want a gap BELOW nav like leaderboard, add:
-.event-page>.navbar {
-  margin-bottom: 2rem;
-}
-
-@media (max-width: 600px) {
-  .event-page {
-    padding-bottom: 2vh;
-    width: 100vw;
-    min-height: 100vh;
-    margin: 0;
-    font-size: 0.95rem;
-  }
-
-  h1 {
-    font-size: 2rem;
-    margin-top: 0.7rem;
-    margin-bottom: 0.5rem;
-    letter-spacing: 0.5px; // Reduce letter spacing so word stays together
-    text-shadow: 0 0 3px $red;
-    width: 100%;
-    box-sizing: border-box;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    overflow-wrap: normal;
-    word-break: normal; // Prevent breaking in the middle of words
-    white-space: normal; // Allow normal wrapping
-    line-height: 1.1;
-  }
-
-  .eventsShow {
-    width: 100vw;
-    padding: 1rem 0 0.5rem 0;
-    gap: 1.2rem;
-    box-sizing: border-box;
-    overflow-x: auto;
-  }
-
-  .event-day {
-    width: 100vw;
-    max-width: 100vw;
-    box-sizing: border-box;
-    padding: 0.7rem 0.5rem 0.3rem 0.5rem;
-    overflow-x: auto;
-
-    h2 {
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-      width: 100%;
-      box-sizing: border-box;
-      padding-left: 0.2rem;
-      padding-right: 0.2rem;
-      overflow-wrap: break-word;
-      word-break: break-word;
+  @keyframes blinklive {
+    0% {
+      box-shadow: 0 0 8px $orange, 0 0 12px $red;
     }
-    .match-row {
-      width: 100%;
-      min-width: 0;
-      box-sizing: border-box;
-      padding: 0.7rem 0.7rem;
+
+    100% {
+      box-shadow: 0 0 15px $orange, 0 0 18px $red;
+    }
+  }
+
+  nav {
+    width: 100%;
+    display: block;
+    position: relative;
+    /* or fixed/sticky as per your logic */
+    z-index: 10;
+  }
+
+
+
+  .container {
+    width: 100%;
+    max-width: none; // ✅ remove fixed max-width
+    margin: 0; // ✅ remove centering
+    padding: 0 1rem; // optional, if you still want side spacing
+  }
+
+  // Make the NavigationBar always stretch full width, and push it to the very top.
+  .event-page>.navbar {
+    width: 100vw; // Full viewport width, like leaderboard
+    margin: 0 !important; // No extra margin
+    padding: 0.5rem 2rem; // Same as leaderboard's navbar
+    box-sizing: border-box;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    transform: translate(-50%, 0); // Center it (handles the 100vw inside other boxed elements)
+    z-index: 20;
+    border-radius: 0; // No rounding
+    background: $bg-dark; // Or whatever you use
+    // Optional: add .navbar-specific box-shadow, etc as in leaderboard
+  }
+
+  // Remove any "auto/max-width" limits or margin-top
+  .event-page {
+    margin: 0;
+    padding: 0;
+    width: 100vw; // Ensure parent fills viewport horizontally
+    min-height: 100vh; // Optional, for full screen
+
+  }
+
+  // If you want a gap BELOW nav like leaderboard, add:
+  .event-page>.navbar {
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 600px) {
+    .event-page {
+      padding-bottom: 2vh;
+      width: 100vw;
+      min-height: 100vh;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-top: 0.7rem;
       margin-bottom: 0.5rem;
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
-      justify-content: space-between;
+      letter-spacing: 0.5px; // Reduce letter spacing so word stays together
+      text-shadow: 0 0 3px $red;
+      width: 100%;
+      box-sizing: border-box;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      overflow-wrap: normal;
+      word-break: normal; // Prevent breaking in the middle of words
+      white-space: normal; // Allow normal wrapping
+      line-height: 1.1;
+    }
+
+    .eventsShow {
+      width: 100vw;
+      padding: 1rem 0 0.5rem 0;
+      gap: 1.2rem;
+      box-sizing: border-box;
       overflow-x: auto;
     }
-  }
 
-  .EventSettings {
-    max-width: 98vw;
-    padding: 0.7rem 0.3rem;
-    button {
-      font-size: 0.95rem;
-      padding: 0.5rem 0.8rem;
+    .event-day {
+      width: 100vw;
+      max-width: 100vw;
+      box-sizing: border-box;
+      padding: 0.7rem 0.5rem 0.3rem 0.5rem;
+      overflow-x: auto;
+
+      h2 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        width: 100%;
+        box-sizing: border-box;
+        padding-left: 0.2rem;
+        padding-right: 0.2rem;
+        overflow-wrap: break-word;
+        word-break: break-word;
+      }
+
+      .match-row {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 0.7rem 0.7rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        justify-content: space-between;
+        overflow-x: auto;
+      }
     }
-    form {
-      gap: 0.3rem;
-      label {
+
+    .EventSettings {
+      max-width: 98vw;
+      padding: 0.7rem 0.3rem;
+
+      button {
         font-size: 0.95rem;
-        input {
+        padding: 0.5rem 0.8rem;
+      }
+
+      form {
+        gap: 0.3rem;
+
+        label {
           font-size: 0.95rem;
-          padding: 0.3rem;
+
+          input {
+            font-size: 0.95rem;
+            padding: 0.3rem;
+          }
+        }
+
+        .submit-section {
+          margin-top: 0.2rem;
+        }
+
+        .stat-update-message {
+          font-size: 0.95rem;
         }
       }
-      .submit-section {
-        margin-top: 0.2rem;
-      }
-      .stat-update-message {
-        font-size: 0.95rem;
-      }
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-top: 0.7rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.5px; // Reduce letter spacing so word stays together
+      text-shadow: 0 0 3px $red;
+    }
+
+    // Fix overflow for all sections
+    .event-page,
+    .eventsShow,
+    .event-day,
+    .match-row {
+      box-sizing: border-box;
+      overflow-x: hidden;
     }
   }
-
-  h1 {
-    font-size: 2rem;
-    margin-top: 0.7rem;
-    margin-bottom: 0.5rem;
-    letter-spacing: 0.5px; // Reduce letter spacing so word stays together
-    text-shadow: 0 0 3px $red;
-  }
-
-  // Fix overflow for all sections
-  .event-page, .eventsShow, .event-day, .match-row {
-    box-sizing: border-box;
-    overflow-x: hidden;
-  }
-}}
+}
 </style>

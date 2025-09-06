@@ -1,4 +1,6 @@
 <template>
+
+
   <div class="home-page">
     <NavigationBar />
 
@@ -89,8 +91,8 @@
             <label for="bitsID">Enter your BITS ID</label>
             <input type="text" id="bitsID" v-model="participationData.bitsID" required
 
-              pattern="^20\d{2}[A-Z][A-Z0-9][A-Z][A-Z0-9]\d{4}[A-Z]$"
-              title="Format: 20XXA1BB1234C (e.g., 2021A3BC1234D)" />
+              pattern="^20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-Za-z]\d{4}[A-Za-z]$"
+              title="Format: 20XXA1BB1234C (e.g., 2021A3BC1234D) or 2024B4A7PS0491G" />
 
             <span v-if="userIdError" class="error">{{ userIdError }}</span>
 
@@ -208,15 +210,15 @@
         <h2>Your Request Status</h2>
         <div class="join-request-status" :class="userJoinRequest.status">
           <template v-if="userJoinRequest.status === 'pending'">
-            <p>⏳ Your request to join team <strong>{{ userJoinRequest.teamId }}</strong> is <span
+            <p>Your request to join team <strong>{{ userJoinRequest.teamId }}</strong> is <span
                 class="status">pending</span> approval.</p>
           </template>
           <template v-else-if="userJoinRequest.status === 'accepted'">
-            <p>✅ <strong>Accepted!</strong> You’re now a part of team <strong>{{ userJoinRequest.teamId }}</strong>.</p>
+            <p><strong>Accepted!</strong> You’re now a part of team <strong>{{ userJoinRequest.teamId }}</strong>.</p>
             <button class="view-team-btn" @click="fetchTeamData(userInfo)">View Team Details</button>
           </template>
           <template v-else-if="userJoinRequest.status === 'rejected'">
-            <p>❌ <strong>Rejected.</strong> Request to join team <strong>{{ userJoinRequest.teamId }}</strong> was
+            <p><strong>Rejected.</strong> Request to join team <strong>{{ userJoinRequest.teamId }}</strong> was
               rejected.</p>
             <div class="retry-form">
               <label for="newTeamId">Enter New Team ID:</label>
@@ -244,11 +246,17 @@
               <span class="pending-mail"><b>Email:</b> {{ req.requesterEmail }}</span>
             </div>
             <div class="req-actions">
-              <button class="accept-btn" @click="acceptRequest(req)">
-                Accept
+              <button class="accept-btn"
+                @click="acceptRequest(req)"
+                :disabled="requestActionLoading[req.id]">
+                <span v-if="requestActionLoading[req.id]">Accepting...</span>
+                <span v-else>Accept</span>
               </button>
-              <button class="decline-btn" @click="declineRequest(req)">
-                Decline
+              <button class="decline-btn"
+                @click="declineRequest(req)"
+                :disabled="requestActionLoading[req.id]">
+                <span v-if="requestActionLoading[req.id]">Declining...</span>
+                <span v-else>Decline</span>
               </button>
             </div>
           </li>
@@ -822,7 +830,7 @@ export default {
 
     function validateUserID() {
 
-      const regex = /^20\d{2}[A-Z][A-Z0-9][A-Z][A-Z0-9]\d{4}[A-Z]$/;
+      const regex = /^20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-Za-z]\d{4}[A-Za-z]$/;
       if (!regex.test(participationData.value.bitsID)) {
         userIdError.value = 'Invalid ID format. Example: 2021A3BC1234G';
         return false;
@@ -911,8 +919,11 @@ export default {
       teamMembers.value = members;
     }
 
+    const requestActionLoading = ref({}); // Track loading per request
+
     async function acceptRequest(request) {
       try {
+        requestActionLoading.value[request.id] = true;
         await updateDoc(doc(db, "teamJoinRequests", request.id), {
           status: "accepted"
         });
@@ -921,23 +932,34 @@ export default {
           members: arrayUnion(request.requesterUid)
         });
 
-        await updateDoc(doc(db, "users", request.requesterUid), {
-          teamId: request.teamId
-        })
+        // await updateDoc(doc(db, "users", request.requesterUid), {
+        //   teamId: request.teamId
+        // })
 
         fetchTeamRequests(request.teamId);
+        // Reload the page after accepting
+        //eslint-disable-next-line
+        window.location.reload();
       } catch (error) {
         console.error("Error accepting request:", error);
+      } finally {
+        requestActionLoading.value[request.id] = false;
       }
     }
     async function declineRequest(request) {
       try {
+        requestActionLoading.value[request.id] = true;
         await updateDoc(doc(db, "teamJoinRequests", request.id), {
           status: "rejected"
         });
         fetchTeamRequests(request.teamId);
+        // Reload the page after declining
+        //eslint-disable-next-line
+        window.location.reload();
       } catch (error) {
         console.error("Error declining request:", error);
+      } finally {
+        requestActionLoading.value[request.id] = false;
       }
     }
     //eslint-disable-next-line
@@ -1021,7 +1043,8 @@ export default {
       teamLeaderId,
       scrollMembers,
       membersScroll,
-      phoneError
+      phoneError,
+      requestActionLoading,
     };
   }
 };
@@ -1757,7 +1780,7 @@ html, body {
   h2 {
     color: $orange;
     margin-bottom: 1rem;
-    font-family: 'Integral-CF-Bold', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
   }
 
   .join-request-status {
@@ -1770,17 +1793,17 @@ html, body {
 
     &.pending {
       color: $orange;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
     }
 
     &.accepted {
       color: #2ecc40;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
     }
 
     &.rejected {
       color: $red;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
     }
 
     .status {
@@ -1792,7 +1815,7 @@ html, body {
   .retry-btn {
     background: $orange;
     color: $bg-dark;
-    font-family: 'Integral-CF-Bold', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
     border-radius: 8px;
     padding: 0.5em 1.3em;
     font-size: 1rem;
