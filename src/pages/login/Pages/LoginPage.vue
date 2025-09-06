@@ -1,24 +1,32 @@
 <template>
   <div class="login-root" :style="{ backgroundImage: 'url(' + currentBg + ')' }">
     <div class="blue-gradient-overlay"></div>
-
-    <div class="text-container">
-      <div class="wreck-text" ref="wreckRef">BITS Goa</div>
-      <div class="havoc-text" ref="havocRef">ESPORTS Club</div>
-      <div class="neon-quote" ref="neonQuoteRef">
-        Fuel the Chaos. Rule the Game.
+    <div class="black-overlay"></div>
+    <div class="login-content-wrapper">
+      <!-- Left side: empty for now, just for layout -->
+      <div class="login-left"></div>
+      <!-- Right side: actual content -->
+      <div class="login-right">
+        <div class="text-container" ref="textContainerRef">
+          <div class="centered-title-group">
+            <div class="wreck-text" ref="wreckRef">BITS Goa</div>
+            <div class="havoc-text" ref="havocRef">Esports Community</div>
+          </div>
+          <hr class="divider-line" />
+          <div class="neon-quote" ref="neonQuoteRef">
+            Fuel the Chaos. Rule the Game.
+          </div>
+          <button class="insert-coin-btn" @click="handleCoin" :disabled="isLoading" ref="googleBtnRef">
+            Insert Coin
+          </button>
+        </div>
       </div>
     </div>
-
-    <div class="black-overlay"></div>
-
-    <button class="insert-coin-btn" @click="handleCoin" :disabled="isLoading" ref="googleBtnRef">
-      Insert Coin
-    </button>
   </div>
 </template>
 
 <script setup>
+/* eslint-disable */
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { getApp } from 'firebase/app'
@@ -50,7 +58,7 @@ const mobileBgImages = [
 //eslint-disable-next-line
 const isMobile = ref(window.innerWidth <= 768);
 const currentBg = ref(
-  isMobile.value 
+  isMobile.value
     ? mobileBgImages[Math.floor(Math.random() * mobileBgImages.length)]
     : bgImages[Math.floor(Math.random() * bgImages.length)]
 );
@@ -65,6 +73,64 @@ const wreckRef = ref(null);
 const havocRef = ref(null);
 const neonQuoteRef = ref(null);
 
+// Additional refs for container adjustment
+const textContainerRef = ref(null);
+const contentOverflowing = ref(false);
+const containerOffset = ref(0);
+
+// Function to check if text is overflowing and adjust container position
+const checkTextOverflow = () => {
+  if (!wreckRef.value || !havocRef.value || !textContainerRef.value) return;
+
+  // Get container and text dimensions
+  const container = textContainerRef.value;
+  const wreckEl = wreckRef.value;
+  const havocEl = havocRef.value;
+
+  // Calculate the right edge of the container parent (.login-right)
+  const parentRect = container.parentElement.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
+  const containerRightEdge = parentRect.right; // Use parent's right edge instead
+
+  // Get the text elements' dimensions
+  const wreckRect = wreckEl.getBoundingClientRect();
+  const havocRect = havocEl.getBoundingClientRect();
+
+  // Find the rightmost text edge
+  const wreckRightEdge = wreckRect.left + wreckRect.width;
+  const havocRightEdge = havocRect.left + havocRect.width;
+  const textRightEdge = Math.max(wreckRightEdge, havocRightEdge);
+
+  // Debug check (can be removed in production)
+  console.log('Text right edge:', textRightEdge);
+  console.log('Container right edge:', containerRightEdge);
+
+  // Check if text is overflowing the container's parent
+  contentOverflowing.value = textRightEdge > (containerRightEdge - 10); // Subtract 10px buffer
+
+  // If overflowing, calculate needed offset with padding
+  if (contentOverflowing.value) {
+    const padding = 30; // Increased padding to ensure text is fully visible
+    const neededOffset = textRightEdge - containerRightEdge + padding;
+    containerOffset.value = neededOffset;
+
+    // Force the container to be aligned at the start (left) when overflowing
+    container.style.transform = `translateX(-${neededOffset}px)`;
+
+    // Ensure all elements inside are visible by setting min-width
+    const totalContentWidth = Math.max(wreckRect.width, havocRect.width) + padding;
+    container.style.minWidth = `${totalContentWidth}px`;
+
+    // Debug
+    console.log('Applied offset:', neededOffset);
+  } else {
+    // Reset if not overflowing
+    containerOffset.value = 0;
+    container.style.transform = 'translateX(0)';
+    container.style.minWidth = '';
+  }
+};
+
 // --- Lifecycle & Methods ---
 onMounted(() => {
   // Initialize the coin sound effect
@@ -72,18 +138,35 @@ onMounted(() => {
   coinSound = new Audio(require('@/assets/sounds/insert-coin.mp3'));
   coinSound.volume = 0.8;
 
+  // Run the text overflow check after a small delay to ensure DOM is fully rendered
+  setTimeout(checkTextOverflow, 300);
+
+  // Set up a mutation observer to detect text changes and recheck overflow
+  const textObserver = new MutationObserver(() => {
+    checkTextOverflow();
+  });
+
+  // Observe both text elements for changes
+  if (wreckRef.value && havocRef.value) {
+    textObserver.observe(wreckRef.value, { childList: true, characterData: true, subtree: true });
+    textObserver.observe(havocRef.value, { childList: true, characterData: true, subtree: true });
+  }
+
   // Handle window resize
   resizeHandler = () => {
     //eslint-disable-next-line
     const wasMobile = isMobile.value;
     //eslint-disable-next-line
     isMobile.value = window.innerWidth <= 768;
-    
+
     if (wasMobile !== isMobile.value) {
-      currentBg.value = isMobile.value 
+      currentBg.value = isMobile.value
         ? mobileBgImages[Math.floor(Math.random() * mobileBgImages.length)]
         : bgImages[Math.floor(Math.random() * bgImages.length)];
     }
+
+    // Check for text overflow when window size changes
+    setTimeout(checkTextOverflow, 100); // Small delay to ensure DOM is updated
   };
   //eslint-disable-next-line
   window.addEventListener('resize', resizeHandler);
@@ -110,6 +193,16 @@ onMounted(() => {
       duration: 2,
       ease: "none"
     }, ">-0.5");
+
+    // Check text overflow after animations complete and ensure it's checked multiple times
+    tl.call(() => {
+      // Run the check multiple times with increasing delays to ensure it works
+      // after all animations and font loading are complete
+      checkTextOverflow();
+      setTimeout(checkTextOverflow, 100);
+      setTimeout(checkTextOverflow, 500);
+      setTimeout(checkTextOverflow, 1000);
+    });
   });
 
   gsap.matchMedia().add("(max-width: 768px)", () => {
@@ -168,7 +261,7 @@ async function handleCoin() {
 
   const auth = getAuth(getApp());
   const provider = new GoogleAuthProvider();
-  
+
   // Animation for button click
   gsap.to(googleBtnRef.value, { scale: 0.95, duration: 0.1, yoyo: true, repeat: 1 });
 
@@ -177,7 +270,7 @@ async function handleCoin() {
   } catch (error) {
     // Error animation
     gsap.to(googleBtnRef.value, {
-      x: ['-10px', '10px', '-10px', '10px', '0px'], 
+      x: ['-10px', '10px', '-10px', '10px', '0px'],
       duration: 0.5,
       ease: 'power2.out',
     });
@@ -211,228 +304,314 @@ $ref-height: 768;
   background-position: center;
   background-repeat: no-repeat;
   overflow: hidden;
-  
-  // Mobile: Flexbox layout
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.login-content-wrapper {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  z-index: 10;
+
   @media (max-width: 768px) {
-    background-size: cover;
-    background-position: center;
-    display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    height: auto;
+    width: 100vw;
+  }
+}
+
+.login-left {
+  flex: 1 1 0;
+
+  // Empty, just for layout spacing
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.login-right {
+  flex: 0 0 800px; // Increase from 600px
+  max-width: 800px; // Increase from 600px
+  min-width: 350px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; // Changed from center to push content higher
+  align-items: center;
+  margin-left: auto;
+  margin-right: 0;
+  height: 100vh;
+  position: relative;
+  z-index: 10;
+  padding-top: 20vh; // Add top padding to position content higher
+  padding-bottom: 20vh; // Increased padding to move content up more
+
+  @media (max-width: 1200px) {
+    flex: 0 0 600px; // Increase from 480px
+    max-width: 600px; // Increase from 480px
+    min-width: 320px;
+  }
+
+  @media (max-width: 900px) {
+    flex: 0 0 100vw;
+    max-width: 100vw;
+    min-width: 0;
+    margin: 0 auto;
+    height: auto;
+  }
+
+  @media (max-width: 768px) {
+    width: 100vw;
+    max-width: 100vw;
+    min-width: 0;
+    margin: 0 auto;
+    height: auto;
     align-items: center;
-    padding-top: 20vh;
-    height: 100vh; // Fixed height for proper centering
-    overflow-y: auto;
+    justify-content: flex-start;
   }
 }
 
 // Gradient & overlay layers
 .blue-gradient-overlay {
-  position: absolute; 
+  position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, rgba(28,48,118,0.25) 0%, rgba(9,11,47,0.85) 100%);
+  background: radial-gradient(ellipse at center, rgba(28, 48, 118, 0.25) 0%, rgba(9, 11, 47, 0.85) 100%);
   z-index: 1;
-  
+
   @media (max-width: 768px) {
-    background: radial-gradient(ellipse at center, rgba(28,48,118,0.15) 0%, rgba(9,11,47,0.6) 100%);
+    background: radial-gradient(ellipse at center, rgba(28, 48, 118, 0.15) 0%, rgba(9, 11, 47, 0.6) 100%);
   }
 }
 
 .black-overlay {
-  position: absolute; 
+  position: absolute;
   inset: 0;
-  background: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.7) 75%, rgba(0,0,0,0.9) 100%);
+  background: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.7) 75%, rgba(0, 0, 0, 0.9) 100%);
   z-index: 2;
-  
+
   @media (max-width: 768px) {
-    background: rgba(0,0,0,0.35);
+    background: rgba(0, 0, 0, 0.35);
   }
 }
 
 // Text container
 .text-container {
-  position: absolute; 
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 0;
+  position: relative;
+  z-index: 10;
+  min-width: 500px; // Ensure minimum width to prevent wrapping
+  max-width: none; // Remove max-width constraint to allow full text visibility
+  overflow: visible !important; // Ensure content is visible outside container
+  transition: transform 0.3s ease; // Smooth transition when shifting position
+  will-change: transform; // Optimize for transform animations
+
   @media (max-width: 768px) {
-    position: static;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    text-align: center;
-    padding: 0 2rem;
+    padding: 0 1rem;
     margin-bottom: 3rem;
+    min-width: auto; // Reset for mobile
+    max-width: 100%; // Allow full width on mobile
+    overflow: visible; // Ensure visibility
+    transform: none !important; // Disable transform on mobile
+  }
+}
+
+.centered-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 5rem !important; // Increased margin with !important
+  overflow: visible; // Change from overflow-x: auto
+
+  @media (max-width: 768px) {
+    margin-bottom: 1.2rem;
+    white-space: normal;
+    overflow: visible; // Change from overflow-x: visible
   }
 }
 
 // Wreck - Desktop positioning
 .wreck-text {
-  position: absolute;
-  left: (880 / $ref-width) * 100vw;
-  top:  (100 / $ref-height) * 100vh;
-  width:  (600 / $ref-width) * 100vw;
-  height: (177.8 / $ref-height) * 100vh;
   font-family: $font-norwester;
-  font-size: (140 / $ref-height) * 100vh;
+  font-size: clamp(2.2rem, 10rem, 20rem);
+  color: #fff;
+  text-align: center;
   line-height: 1;
-  color: #ffffff;
-  
-  // Mobile: Centered and responsive
+  letter-spacing: 2px;
+  margin-bottom: 1.5rem; // Reduced from 3rem to tighten up spacing
+  max-width: 100%;
+  overflow: visible; // Change from overflow-x: auto to visible
+  white-space: nowrap;
+  word-break: keep-all;
+
+  @media (max-width: 1200px) {
+        font-size: clamp(1rem, 4rem, 7rem);
+
+  }
+
   @media (max-width: 768px) {
-    position: static;
-    width: auto;
-    font-size: 17vw;
-    gap: 0.5rem;
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
-    letter-spacing: 2px;
-    line-height: 1;
+    font-size: clamp(1rem, 4rem, 7rem);
+
+    margin-bottom: 0.5rem;
+    white-space: normal;
+    word-break: break-word;
+    overflow-x: visible;
   }
 }
 
 // Havoc - Desktop positioning
 .havoc-text {
-  position: absolute;
-  left: (780 / $ref-width) * 100vw;
-  top:  (260 / $ref-height) * 100vh;
-  width:  (700 / $ref-width) * 100vw;
-  height: (165    / $ref-height) * 100vh;
   font-family: $font-norwester;
-  font-size: (120 / $ref-height) * 100vh;
+  font-size: clamp(2.2rem, 5rem, 10rem);
+  color: #fff;
+  text-align: center;
   line-height: 1;
-  color: #ffffff;
-  
-  // Mobile: Centered and responsive
+  letter-spacing: 2px;
+  margin-bottom: 1vh !important; // Much larger bottom margin with !important
+  max-width: none; // Remove max-width to prevent truncation
+  overflow: visible !important; // Force overflow to be visible
+  white-space: nowrap !important; // Ensure text doesn't wrap
+  display: inline-block; // Use inline-block for proper width calculation
+  width: auto; // Allow natural width
+  word-break: keep-all;
+
+  @media (max-width: 1200px) {
+    font-size: clamp(1.2rem, 3vw, 2rem);
+  }
+
   @media (max-width: 768px) {
-    position: static;
-    font-size: 14vw;
-    width: auto;
-    gap: 1rem;
-    text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
-    letter-spacing: 2px;
-    line-height: 1;
-    transform: translateY(-4rem);
+    font-size: clamp(1rem, 3rem, 5rem);
+    margin-bottom: 0.5rem;
+    white-space: normal !important; // Allow wrapping on mobile
+    word-break: break-word;
+    overflow-x: visible;
+    width: 100%; // Full width on mobile
+  }
+}
+
+.divider-line {
+  width: 70%;
+  border: none;
+  border-top: 2px solid #fff;
+  margin: 0 auto 1vh auto !important; // Larger bottom margin with !important
+  opacity: 0.25;
+
+  @media (max-width: 768px) {
+    width: 80%;
+    margin: 1.2rem auto 2rem auto; // Increased bottom margin for mobile
   }
 }
 
 // Neon quote - Desktop positioning
 .neon-quote {
-  position: absolute;
-  left: (910   / $ref-width) * 100vw;
-  top:  (420  / $ref-height) * 100vh;
-  width:  (500 / $ref-width) * 100vw;
-  height: (22.8  / $ref-height) * 100vh;
   font-family: $font-orbitron;
-  font-size: (22.8 / $ref-height) * 100vh;
-  line-height: 1;
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
   color: #f0efea;
-  // Mobile: Centered and responsive
-  @media (max-width: 768px) {
-    position: static;
-    width:auto;
-    font-size: 4.5vw;
+  text-align: center;
+  margin-bottom: 9rem !important; // Much larger bottom margin with !important
+  margin-top: 0; // Keep this at 0 since we increased divider's bottom margin
+  width: 100%;
+  line-height: 1.2;
+  text-shadow: 0 0 10px #fff, 0 0 4px #fff;
+
+  @media (max-width: 1200px) {
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
     margin-bottom: 2rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
-    transform: translateY(-6rem);
-    max-width: 90vw;
+  }
+
+  @media (max-width: 768px) {
+    font-size: clamp(0.8rem, 4vw, 1rem);
+    margin-bottom: 1.5rem;
   }
 }
 
 // Button - Desktop positioning
 .insert-coin-btn {
-  position: absolute;
-  z-index: 10; // Increased z-index
-  left: (960   / $ref-width) * 100vw;
-  top:  (546.9  / $ref-height) * 100vh;
-  width:  (237.5 / $ref-width) * 100vw;
-  height: (43.6  / $ref-height) * 100vh;
-  background: rgba(34, 33, 33, 0.3);
+  display: block;
+  margin: 0 auto;
+  background: rgba(34, 33, 33, 0.8);
   border: none;
   color: #ffffff;
   font-family: $font-press;
-  font-size: (18 / $ref-height) * 100vh;
-  line-height: (43.6 / $ref-height) * 100vh;
+  font-size: 1.3rem;
+  line-height: 2.8rem;
   text-align: center;
   cursor: pointer;
+  border-radius: 8px;
+  width: 70%;
+  max-width: 320px;
+  height: 60px;
+  margin-bottom: 0;
+  margin-top: 4rem !important; // Increased top margin with !important
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   animation: neon-glow 2s infinite alternate ease-in-out;
-  
-  // Mobile: Centered and responsive
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+
+  @media (max-width: 1200px) {
+    font-size: 1.1rem;
+    height: 50px;
+    max-width: 260px;
+  }
+
   @media (max-width: 768px) {
-    position: static; // Changed from relative to static
-    z-index: 10;
     width: 80vw;
     max-width: 320px;
-    height: 60px;
-    font-size: 14px;
-    line-height: 60px;
-    border-radius: 6px;
-    background: rgba(34, 33, 33, 0.8);
-    backdrop-filter: blur(15px);
-    border: 2px solid rgba(255,255,255,0.3);
-    margin-top: auto;
+    font-size: 1rem;
+    height: 45px;
     margin-bottom: 10vh;
-    text-shadow: 0 0 10px rgba(255,255,255,0.5);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    
-    // Touch-friendly styling
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
   }
 
   &:hover {
     animation-play-state: paused;
-    text-shadow:
-      0 0 (20 / $ref-width) * 100vw #fff,
-      0 0 (10 / $ref-width) * 100vw #fff,
-      0 0 (5  / $ref-width) * 100vw #fff;
-      
-    @media (max-width: 768px) {
-      text-shadow:
-        0 0 15px #fff,
-        0 0 8px #fff,
-        0 0 4px #fff;
-      transform: scale(1.02);
-    }
+    text-shadow: 0 0 20px #fff, 0 0 10px #fff, 0 0 5px #fff;
+    transform: scale(1.02);
   }
-  
+
   &:active {
-    @media (max-width: 768px) {
-      transform: scale(0.98);
-      background: rgba(34, 33, 33, 0.9);
-    }
+    transform: scale(0.98);
+    background: rgba(34, 33, 33, 0.9);
   }
-  
+
   &:disabled {
     opacity: 0.6;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0, 0, 0, 0.3);
     cursor: not-allowed;
-    
-    @media (max-width: 768px) {
-      background: rgba(0,0,0,0.5);
-    }
   }
 }
 
 @keyframes neon-glow {
   from {
-    text-shadow: 0 0 (8 / $ref-width) * 100vw rgba(255,255,255,0.2);
-    
+    text-shadow: 0 0 (8 / $ref-width) * 100vw rgba(255, 255, 255, 0.2);
+
     @media (max-width: 768px) {
-      text-shadow: 0 0 6px rgba(255,255,255,0.3);
+      text-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
     }
   }
+
   to {
     text-shadow:
-      0 0 (15 / $ref-width) * 100vw rgba(255,255,255,0.8),
-      0 0 (5  / $ref-width) * 100vw rgba(255,255,255,0.8);
-      
+      0 0 (15 / $ref-width) * 100vw rgba(255, 255, 255, 0.8),
+      0 0 (5 / $ref-width) * 100vw rgba(255, 255, 255, 0.8);
+
     @media (max-width: 768px) {
       text-shadow:
-        0 0 12px rgba(255,255,255,0.8),
-        0 0 6px rgba(255,255,255,0.8),
-        0 0 3px rgba(255,255,255,0.6);
+        0 0 12px rgba(255, 255, 255, 0.8),
+        0 0 6px rgba(255, 255, 255, 0.8),
+        0 0 3px rgba(255, 255, 255, 0.6);
     }
   }
 }
@@ -445,14 +624,14 @@ $ref-height: 768;
     transform: translateX(-50%);
     top: 15vh;
   }
-  
+
   .havoc-text {
     font-size: 13vw;
     left: 50vw;
     transform: translateX(-50%);
     top: 30vh;
   }
-  
+
   .neon-quote {
     font-size: 3vw;
     left: 50vw;
@@ -460,7 +639,7 @@ $ref-height: 768;
     top: 50vh;
     text-align: center;
   }
-  
+
   .insert-coin-btn {
     left: 50vw;
     transform: translateX(-50%);
@@ -468,6 +647,62 @@ $ref-height: 768;
     width: 40vw;
     max-width: 300px;
     font-size: 2vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-content-wrapper {
+    flex-direction: column;
+    height: auto;
+    width: 100vw;
+  }
+
+  .login-right {
+    width: 100vw;
+    max-width: 100vw;
+    min-width: 0;
+    margin: 0 auto;
+    height: auto;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 30vh ;
+    padding-bottom: 5vh;
+  }
+
+  .text-container {
+    padding: 0 1rem;
+    margin-bottom: 3rem;
+    max-width: 100vw;
+    min-width: 0;
+    white-space: normal;
+    overflow-x: visible;
+  }
+
+  .centered-title-group {
+    margin-bottom: 2rem;
+    white-space: normal;
+    overflow: visible;
+  }
+
+  .wreck-text {
+    margin-bottom: 1rem !important;
+  }
+
+  .havoc-text {
+    margin-bottom: 1vh!important;
+  }
+
+  .divider-line {
+    margin: 1.5rem auto 3rem auto !important;
+  }
+
+  .neon-quote {
+    margin-bottom: 3rem !important;
+  }
+
+  .insert-coin-btn {
+    margin-top: 2rem !important;
+    margin-bottom: 10vh;
   }
 }
 </style>

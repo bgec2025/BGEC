@@ -1,4 +1,6 @@
 <template>
+
+
   <div class="home-page">
     <NavigationBar />
 
@@ -89,8 +91,8 @@
             <label for="bitsID">Enter your BITS ID</label>
             <input type="text" id="bitsID" v-model="participationData.bitsID" required
 
-              pattern="^20\d{2}[A-Z][A-Z0-9][A-Z][A-Z0-9]\d{4}[A-Z]$"
-              title="Format: 20XXA1BB1234C (e.g., 2021A3BC1234D)" />
+              pattern="^20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-Za-z]\d{4}[A-Za-z]$"
+              title="Format: 20XXA1BB1234C (e.g., 2021A3BC1234D) or 2024B4A7PS0491G" />
 
             <span v-if="userIdError" class="error">{{ userIdError }}</span>
 
@@ -208,15 +210,15 @@
         <h2>Your Request Status</h2>
         <div class="join-request-status" :class="userJoinRequest.status">
           <template v-if="userJoinRequest.status === 'pending'">
-            <p>⏳ Your request to join team <strong>{{ userJoinRequest.teamId }}</strong> is <span
+            <p>Your request to join team <strong>{{ userJoinRequest.teamId }}</strong> is <span
                 class="status">pending</span> approval.</p>
           </template>
           <template v-else-if="userJoinRequest.status === 'accepted'">
-            <p>✅ <strong>Accepted!</strong> You’re now a part of team <strong>{{ userJoinRequest.teamId }}</strong>.</p>
+            <p><strong>Accepted!</strong> You’re now a part of team <strong>{{ userJoinRequest.teamId }}</strong>.</p>
             <button class="view-team-btn" @click="fetchTeamData(userInfo)">View Team Details</button>
           </template>
           <template v-else-if="userJoinRequest.status === 'rejected'">
-            <p>❌ <strong>Rejected.</strong> Request to join team <strong>{{ userJoinRequest.teamId }}</strong> was
+            <p><strong>Rejected.</strong> Request to join team <strong>{{ userJoinRequest.teamId }}</strong> was
               rejected.</p>
             <div class="retry-form">
               <label for="newTeamId">Enter New Team ID:</label>
@@ -243,11 +245,17 @@
               <span class="pending-mail"><b>Email:</b> {{ req.requesterEmail }}</span>
             </div>
             <div class="req-actions">
-              <button class="accept-btn" @click="acceptRequest(req)">
-                Accept
+              <button class="accept-btn"
+                @click="acceptRequest(req)"
+                :disabled="requestActionLoading[req.id]">
+                <span v-if="requestActionLoading[req.id]">Accepting...</span>
+                <span v-else>Accept</span>
               </button>
-              <button class="decline-btn" @click="declineRequest(req)">
-                Decline
+              <button class="decline-btn"
+                @click="declineRequest(req)"
+                :disabled="requestActionLoading[req.id]">
+                <span v-if="requestActionLoading[req.id]">Declining...</span>
+                <span v-else>Decline</span>
               </button>
             </div>
           </li>
@@ -294,7 +302,7 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc,
+  getDoc,// eslint-disable-next-line
   addDoc,
   getDocs,
   collection,
@@ -426,6 +434,9 @@ export default {
 
       // Initialize animations
       initializeAnimations();
+      
+      // Check if user has pending requests and if associated teams are full
+      await checkPendingRequestsForFullTeams();
     });
 
     // ADD these new functions BEFORE the return statement:
@@ -766,6 +777,7 @@ export default {
         return false;
       }
       const teamData = teamDoc.data();
+      
       if (teamData.members.length >= teamData.maxMembers) {
         teamJoinError.value = 'Team is full. Please try another team.';
         return false;
@@ -785,15 +797,34 @@ export default {
         teamJoinError.value = 'You already have a pending request for this team.';
         return false;
       }
-      await addDoc(collection(db, "teamJoinRequests"), {
+      
+      // Get the creator's UID from the team data
+      const creatorUid = teamData.creatorUid;
+      
+      if (!creatorUid) {
+        teamJoinError.value = 'Cannot send request: Team has no leader assigned.';
+        return false;
+      }
+      
+      // Use creatorUid as the document ID for teamJoinRequests
+      await setDoc(doc(db, "teamJoinRequests", creatorUid), {
         teamId: teamId,
         requesterUid: user.uid,
         requesterName: user.displayName,
         requesterEmail: user.email,
+        creatorUid: creatorUid,  // Store the creatorUid for reference
         status: 'pending',
         requestedAt: new Date()
       });
+      
       teamJoinError.value = 'Join request sent! Awaiting team leader approval.';
+      
+      // Reload the window after sending the request
+      setTimeout(() => {
+        //eslint-disable-next-line
+        window.location.reload();
+      }, 1500); // 1.5 second delay so the user can see the success message
+      
       return true;
     }
 
@@ -821,7 +852,7 @@ export default {
 
     function validateUserID() {
 
-      const regex = /^20\d{2}[A-Z][A-Z0-9][A-Z][A-Z0-9]\d{4}[A-Z]$/;
+      const regex = /^20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-Za-z]\d{4}[A-Za-z]$/;
       if (!regex.test(participationData.value.bitsID)) {
         userIdError.value = 'Invalid ID format. Example: 2021A3BC1234G';
         return false;
@@ -892,10 +923,38 @@ export default {
 
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
+        const requestDoc = querySnapshot.docs[0];
+        const requestData = requestDoc.data();
+        
         userJoinRequest.value = {
-          id: querySnapshot.docs[0].id,
-          ...querySnapshot.docs[0].data()
+          id: requestDoc.id,
+          ...requestData
         };
+        
+        // If request is pending, check if the team is now full
+        if (requestData.status === "pending") {
+          const teamId = requestData.teamId;
+          const teamDoc = await getDoc(doc(db, "teams", teamId));
+          
+          if (teamDoc.exists()) {
+            const teamData = teamDoc.data();
+            
+            // If team is full, update the request status to rejected
+            if (teamData.members && teamData.members.length >= teamData.maxMembers) {
+              console.log(`Team ${teamId} is full. Rejecting request ${requestDoc.id}`);
+              
+              // Update request status to rejected
+              await updateDoc(doc(db, "teamJoinRequests", requestDoc.id), {
+                status: "rejected",
+                rejectionReason: "Team is full"
+              });
+              
+              // Update local state
+              userJoinRequest.value.status = "rejected";
+              userJoinRequest.value.rejectionReason = "Team is full";
+            }
+          }
+        }
       }
     }
 
@@ -910,8 +969,11 @@ export default {
       teamMembers.value = members;
     }
 
+    const requestActionLoading = ref({}); // Track loading per request
+
     async function acceptRequest(request) {
       try {
+        requestActionLoading.value[request.id] = true;
         await updateDoc(doc(db, "teamJoinRequests", request.id), {
           status: "accepted"
         });
@@ -920,23 +982,34 @@ export default {
           members: arrayUnion(request.requesterUid)
         });
 
-        await updateDoc(doc(db, "users", request.requesterUid), {
-          teamId: request.teamId
-        })
+        // await updateDoc(doc(db, "users", request.requesterUid), {
+        //   teamId: request.teamId
+        // })
 
         fetchTeamRequests(request.teamId);
+        // Reload the page after accepting
+        //eslint-disable-next-line
+        window.location.reload();
       } catch (error) {
         console.error("Error accepting request:", error);
+      } finally {
+        requestActionLoading.value[request.id] = false;
       }
     }
     async function declineRequest(request) {
       try {
+        requestActionLoading.value[request.id] = true;
         await updateDoc(doc(db, "teamJoinRequests", request.id), {
           status: "rejected"
         });
         fetchTeamRequests(request.teamId);
+        // Reload the page after declining
+        //eslint-disable-next-line
+        window.location.reload();
       } catch (error) {
         console.error("Error declining request:", error);
+      } finally {
+        requestActionLoading.value[request.id] = false;
       }
     }
     //eslint-disable-next-line
@@ -968,6 +1041,53 @@ export default {
       }
       catch (error) {
         console.error("Error submitting new request:", error);
+      }
+    }
+
+    // Function to check if teams with pending requests are full
+    async function checkPendingRequestsForFullTeams() {
+      try {
+        // Only run if user is logged in
+        const user = firebaseApp.auth.currentUser;
+        if (!user) return;
+
+        // Get all pending requests from the current user
+        const pendingRequestsQuery = query(
+          collection(db, "teamJoinRequests"),
+          where("requesterUid", "==", user.uid),
+          where("status", "==", "pending")
+        );
+        
+        const pendingRequestsSnapshot = await getDocs(pendingRequestsQuery);
+        
+        // If there are no pending requests, exit
+        if (pendingRequestsSnapshot.empty) return;
+        
+        // Check each pending request
+        for (const requestDoc of pendingRequestsSnapshot.docs) {
+          const requestData = requestDoc.data();
+          const teamId = requestData.teamId;
+          
+          // Get the team document
+          const teamDoc = await getDoc(doc(db, "teams", teamId));
+          
+          // If team exists and is full, update request status to rejected
+          if (teamDoc.exists()) {
+            const teamData = teamDoc.data();
+            
+            if (teamData.members && teamData.members.length >= teamData.maxMembers) {
+              console.log(`Team ${teamId} is full. Rejecting request ${requestDoc.id}`);
+              
+              // Update request status to rejected
+              await updateDoc(doc(db, "teamJoinRequests", requestDoc.id), {
+                status: "rejected",
+                rejectionReason: "Team is full"
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error checking pending requests for full teams:", error);
       }
     }
 
@@ -1020,7 +1140,8 @@ export default {
       teamLeaderId,
       scrollMembers,
       membersScroll,
-      phoneError
+      phoneError,
+      requestActionLoading,
     };
   }
 };
@@ -1748,7 +1869,7 @@ html, body {
   h2 {
     color: $orange;
     margin-bottom: 1rem;
-    font-family: 'Integral-CF-Bold', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
   }
 
   .join-request-status {
@@ -1761,17 +1882,17 @@ html, body {
 
     &.pending {
       color: $orange;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
     }
 
     &.accepted {
       color: #2ecc40;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
     }
 
     &.rejected {
       color: $red;
-      font-family: 'Integral-CF-Bold', sans-serif;
+      font-family: 'Integral-CF', sans-serif;
     }
 
     .status {
@@ -1783,7 +1904,7 @@ html, body {
   .retry-btn {
     background: $orange;
     color: $bg-dark;
-    font-family: 'Integral-CF-Bold', sans-serif;
+    font-family: 'Integral-CF', sans-serif;
     border-radius: 8px;
     padding: 0.5em 1.3em;
     font-size: 1rem;

@@ -32,7 +32,7 @@
                 <td>{{ idx + 1 }}</td>
                 <td v-if="showTeams">{{ entry.teamName }}</td>
                 <td v-else>{{ entry.gameName || entry.displayName || entry.userName }}</td>
-                <td>{{ entry.totalPoints ? entry.totalPoints.toFixed(2) : '0.00' }}</td>
+                <td>{{ entry.totalPoints ? (entry.totalPoints * 100).toFixed(3) : '0.000' }}</td>
               </tr>
             </tbody>
           </table>
@@ -50,8 +50,11 @@
       <div id="info-side-panel-section">
         <div v-if="selectedEntry" class="side-panel">
           <div class="side-panel-bg"></div>
-          <h3 class="side-panel-title">Details {{ showTeams ? selectedEntry.teamName : selectedEntry.userName ||
-            selectedEntry.displayName || selectedEntry.gameName }}</h3>
+          <h3 class="side-panel-title">
+            {{ showTeams.value ? 'Team Details: ' : 'Player Details: ' }}
+            {{ showTeams.value ? selectedEntry.teamName || 'Team' : 
+               selectedEntry.gameName || selectedEntry.userName || selectedEntry.displayName || 'Player' }}
+          </h3>
 
 
           <ul class="side-panel-list">
@@ -74,7 +77,7 @@
                 <img :src="getRandomAvatar(player.id)" alt="Player Avatar" class="player-avatar" />
                 <h4 class="player-name">{{ showTeams ? player.teamName : (player.gameName || player.displayName ||
                   player.userName) }}</h4>
-                <p class="player-points">{{ player.totalPoints.toFixed(2) }} Points</p>
+                <p class="player-points">{{ (player.totalPoints * 100).toFixed(3) }} Points</p>
               </div>
             </div>
           </div>
@@ -107,27 +110,70 @@ const FIELD_LABELS = {
   displayName: 'Name',
   userName: 'Username',
   totalPoints: 'Total Points',
-  normalizedHighestTeamWinStreak: 'Team Win Streak',
-  noramlizedSupportPoints: 'Support Points',
-  normalizedSupportPoints: 'Support Points',
-  normalizedDeaths: 'Deaths',
-  normalizedKills: 'Kills',
+  normalizedHighestTeamWinStreak: 'Normalized Team Win Streak',
+  noramlizedSupportPoints: 'Normalized Support Points',
+  normalizedSupportPoints: 'Normalized Support Points',
+  normalizedDeaths: 'Normalized Deaths',
+  normalizedKills: 'Normalized Kills',
   teamId: 'Team ID',
   userId: 'User ID',
   email: 'Email',
+  // Raw player stats fields
+  kills: 'Kills',
+  deaths: 'Deaths',
+  supportPoints: 'Support Points',
+  highestTeamWinStreak: 'Highest Team Win Streak',
+  // Team stats fields
+  matchesWon: 'Matches Won',
+  matchesLost: 'Matches Lost',
+  currentWinStreak: 'Current Win Streak',
+  highestWinStreak: 'Highest Win Streak',
+  accumulatedKills: 'Total Kills',
+  accumulatedDeaths: 'Total Deaths',
 };
 
 
 
-const INFO_DISPLAY_ORDER = [
-  'id',
-  'teamName', 'gameName', 'displayName', 'userName',
-  'teamId', 'userId',
+// Create separate display orders for teams and players
+const TEAM_INFO_DISPLAY_ORDER = [
+  // Team basic info
+  'teamName',
   'totalPoints',
-  'normalizedHighestTeamWinStreak',
-  'noramlizedSupportPoints', 'normalizedSupportPoints',
-  'normalizedDeaths',
+  
+  // Team stats from teamStats
+  'matchesWon',
+  'matchesLost',
+  'currentWinStreak',
+  'highestWinStreak',
+  'accumulatedKills',
+  'accumulatedDeaths',
+  
+  // ID (lowest priority)
+  'id',
+];
+
+const PLAYER_INFO_DISPLAY_ORDER = [
+  // Player basic info
+  'gameName', 
+  'displayName', 
+  'userName',
+  'totalPoints',
+  
+  // Player stats from playerStats
+  'kills',
+  'deaths',
+  'supportPoints',
+  'highestTeamWinStreak',
+  
+  // Normalized values (less priority)
   'normalizedKills',
+  'normalizedDeaths',
+  'normalizedSupportPoints',
+  'normalizedHighestTeamWinStreak',
+  
+  // IDs (lowest priority)
+  'teamId',
+  'id',
 ];
 
 
@@ -272,10 +318,10 @@ export default {
       const q = query(collection(db, colName), orderBy('totalPoints', 'desc'));
       const snapshot = await getDocs(q);
       leaderboard.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-
-      console.log("Leaderboard after fetch:", leaderboard.value); // Add this
-      console.log("Top Three Players computed value:", topThreePlayers.value); // And this
+      
+      // No need to modify the totalPoints in the actual data, just display it differently
+      console.log("Leaderboard after fetch:", leaderboard.value);
+      console.log("Top Three Players computed value:", topThreePlayers.value);
 
 
       await nextTick();
@@ -284,7 +330,12 @@ export default {
 
 
     onMounted(fetchLeaderboard);
-    watch(showTeams, fetchLeaderboard);
+    watch(showTeams, () => {
+      // Clear the selected entry when switching between teams and players
+      selectedEntry.value = null;
+      // Fetch the new leaderboard
+      fetchLeaderboard();
+    });
 
 
     const myOwnEntryId = computed(() => {
@@ -317,13 +368,30 @@ export default {
 
     const entryDetails = computed(() => {
       if (!selectedEntry.value) return [];
-      return INFO_DISPLAY_ORDER
+      
+      // Use the appropriate display order based on whether we're showing teams or players
+      const displayOrder = showTeams.value ? TEAM_INFO_DISPLAY_ORDER : PLAYER_INFO_DISPLAY_ORDER;
+      
+      return displayOrder
         .map((key) => {
           if (selectedEntry.value[key] !== undefined && selectedEntry.value[key] !== null) {
+            // Format values
+            let value = selectedEntry.value[key];
+            
+            if (key === 'totalPoints') {
+              // Multiply by 100 and format to 3 decimal places
+              value = (value * 100).toFixed(3);
+            } else if (typeof value === 'number') {
+              // Format only normalized values with 3 decimal places
+              if (key.startsWith('normalized')) {
+                value = value.toFixed(3);
+              }
+            }
+            
             return {
               key,
               label: FIELD_LABELS[key] || key,
-              value: selectedEntry.value[key]
+              value: value
             }
           }
         })
@@ -390,9 +458,51 @@ export default {
     }
 
 
-    function selectEntry(entry) {
+    async function selectEntry(entry) {
       playClickSound();
+      
+      // Store basic entry info
       selectedEntry.value = entry;
+      
+      // If viewing player rankings, fetch the detailed playerStats data
+      if (!showTeams.value && entry.id) {
+        try {
+          const playerStatsRef = doc(db, "playerstats", entry.id);
+          const playerStatsSnap = await getDoc(playerStatsRef);
+          
+          if (playerStatsSnap.exists()) {
+            // Combine the playerStats data with the existing entry data
+            selectedEntry.value = { 
+              ...entry, 
+              ...playerStatsSnap.data(),
+              // Keep totalPoints from the ranking data
+              totalPoints: entry.totalPoints
+            };
+          }
+        } catch (error) {
+          console.error("Error fetching player stats:", error);
+        }
+      }
+      // If viewing team rankings, fetch the detailed teamStats data
+      else if (showTeams.value && entry.id) {
+        try {
+          const teamStatsRef = doc(db, "teamstats", entry.id);
+          const teamStatsSnap = await getDoc(teamStatsRef);
+          
+          if (teamStatsSnap.exists()) {
+            // Combine the teamStats data with the existing entry data
+            selectedEntry.value = { 
+              ...entry, 
+              ...teamStatsSnap.data(),
+              // Keep totalPoints from the ranking data
+              totalPoints: entry.totalPoints
+            };
+          }
+        } catch (error) {
+          console.error("Error fetching team stats:", error);
+        }
+      }
+      
       gsap.fromTo(".side-panel",
         { opacity: 0, x: 50 },
         { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }
