@@ -83,7 +83,7 @@
             <h1>Register Here!</h1>
           </div>
           <div class="personal-info">
-            <label for="GameName">Your Game Name:</label>
+            <label for="GameName">Your In-Game Name:</label>
             <input v-model="participationData.gameName" type="text" id="GameName" required />
 
             <label for="bitsID">Enter your BITS ID</label>
@@ -191,7 +191,7 @@
                   <div class="member-details">
                     <div class="member-name">
                       {{ member.gameName || member.displayName }}
-                      <span v-if="member.id === teamLeaderId" class="leader-badge">✨ Leader</span>
+                      <span v-if="member.id === teamLeaderId" class="leader-badge">✨Leader</span>
                     </div>
                     <div class="member-bitsid"><strong>BITS ID:</strong> {{ member.bitsID }}</div>
                     <div class="member-email"><strong>Email:</strong> {{ member.email }}</div>
@@ -239,8 +239,7 @@
         <ul v-else>
           <li v-for="req in teamRequests" :key="req.id" class="pending-req-card">
             <div class="req-main">
-              <span class="pending-name"><b>{{ req.requesterGameName }}</b></span>
-              <span class="pending-bits"><b>BITS ID:</b> {{ req.requesterBitsID }}</span>
+              <span class="pending-name"><b>{{ req.requesterName }}</b><br></span>
               <span class="pending-mail"><b>Email:</b> {{ req.requesterEmail }}</span>
             </div>
             <div class="req-actions">
@@ -1038,7 +1037,7 @@ html, body {
 .home-page {
   background: $bg-dark;
   color: $cream;
-  padding-bottom: 10rem;
+  padding-bottom: 18rem;
   overflow-x: hidden;
 
 
@@ -1626,7 +1625,7 @@ html, body {
 .team-card-container {
   display: flex;
   justify-content: center;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   margin-bottom: 10%;
 }
 
@@ -1636,8 +1635,8 @@ html, body {
   border-radius: 24px;
   box-shadow: 0 8px 32px rgba(52, 3, 7, 0.18);
   padding: 2.5rem 2rem 2rem 2rem;
-  max-width: 700px;
-  width: 90%;
+  max-width: 800px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1660,14 +1659,6 @@ html, body {
   margin-top: 1rem;
 }
 
-.horizontal-scroll {
-  overflow-x: auto;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 1.2rem;
-  padding-bottom: 0.5rem;
-  scroll-behavior: smooth;
-}
 
 .member-card {
   background: $brown30;
@@ -1677,8 +1668,7 @@ html, body {
   margin-top: 1rem;
   flex-direction: column;
   align-items: center;
-  min-width: 170px;
-  max-width: 210px;
+  max-width: 100% !important;
   box-shadow: 0 2px 12px $brown30;
   transition: transform 0.15s, box-shadow 0.15s;
   border: 2px solid transparent;
@@ -1703,7 +1693,8 @@ html, body {
     .member-name {
       color: $cream;
       font-family: 'Integral-CF', sans-serif;
-      font-size: 1.15rem;
+      margin-top: 0.8rem;
+      font-size: 0.8rem !important;
       margin-bottom: 0.1rem;
     }
 
@@ -1761,7 +1752,7 @@ html, body {
   }
 
   .join-request-status {
-    font-size: 1.15rem;
+    font-size: 1.15rem !important;
     margin-top: 0.7em;
 
     p {
@@ -1831,16 +1822,16 @@ html, body {
 .leader-requests-card {
   margin-top: 2.5rem;
   background: $bg-dark-alt;
-  border: 2px solid $orange;
   border-radius: 16px;
   padding: 2rem 1rem;
-  max-width: 500px;
+  max-width: 600px;
   box-shadow: 0 4px 18px $orange;
 
   h2 {
     color: $orange;
     font-size: 1.7rem;
     margin-bottom: 1.1rem;
+    font-family: 'Courier New', Courier, monospace;
   }
 
   ul {
@@ -1863,7 +1854,7 @@ html, body {
         margin-bottom: .8rem;
         text-align: center;
 
-        .pending-name {
+        .pending-name .pending-mail {
           font-weight: 700;
           color: $orange;
         }
@@ -1905,16 +1896,26 @@ html, body {
 /* Responsive tweaks */
 @media (max-width: 600px) {
   .team-card {
+    max-width: 98vw !important;
+    width: 90vw !important;
     padding: 1rem 0.2rem;
   }
 
+  .leader-requests-card
+  {
+    max-width: 500px;
+  }
+
   .members-list {
-    gap: 0.75rem;
+    justify-content: center !important;
   }
 
   .member-card {
-    min-width: 128px;
-    max-width: 150px;
+      min-width: 0 !important;
+      max-width: 85vw !important;
+      width: 80vw !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
   }
 
   .welcomeText {
@@ -1964,11 +1965,12 @@ html, body {
   }
 
   .members-list {
-    display: flex;
+    display: flex !important  ;
     flex-direction: row;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: center !important;
     gap: 1.5rem;
+
   }
 
   .member-card {
@@ -1978,10 +1980,9 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 160px;
-    max-width: 210px;
     box-shadow: 0 2px 12px $brown30;
     transition: transform 0.15s;
+    align-self: center;
 
     &:hover {
       transform: translateY(-5px) scale(1.03);
@@ -2022,17 +2023,6 @@ html, body {
         }
       }
     }
-  }
-}
-
-@media (max-width: 500px) {
-  .team-card {
-    max-width: 99vw;
-  }
-
-  .member-card {
-    min-width: 130px;
-    max-width: 95vw;
   }
 }
 
@@ -2116,7 +2106,7 @@ html, body {
         .featured-name {
           font-family: 'Integral-CF', sans-serif;
           color: $cream;
-          font-size: 1.5rem;
+          font-size: 0.8  rem;
           margin-bottom: 8px;
         }
 
@@ -2282,7 +2272,7 @@ html, body {
     }
   }
   .featured-name{
-    font-size: 1.2rem !important;
+    font-size: 0.8rem !important;
   }
   .featured-list {
   flex-direction: column !important;
