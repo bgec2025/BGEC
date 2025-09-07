@@ -33,9 +33,9 @@
               <div class="matchStatus">
                 <span class="matchStatus" :class="{
                   status: day.isLive && match.isLive,
-                  result: !day.isLive && match.isLive
+                  result: day.isLive && !match.isLive
                 }">
-                  {{ !day.isLive ? match.result : match.status }}
+                  {{ !match.isLive ? match.result : match.status }}
                 </span>
               </div>
             </div>
