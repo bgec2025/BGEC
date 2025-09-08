@@ -3,7 +3,7 @@
     <div class="navbar-container">
       <!-- Logo and Brand -->
       <div class="navbar-brand" ref="brand">
-        <img src="../assets/images/logo.png" alt="Logo" class="navbar-logo" />
+        <!-- <img src="../assets/images/logo.png" alt="Logo" class="navbar-logo" /> -->
         <span class="brand-text">BITS Goa Esports Club</span>
       </div>
 
