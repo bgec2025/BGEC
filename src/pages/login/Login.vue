@@ -25,6 +25,13 @@ export default {
         if (!user) {
           router.replace('/Login');
         } else {
+          // Check for BITS Goa email
+          if (!user.email.endsWith('@goa.bits-pilani.ac.in')) {
+            await auth.signOut();
+            alert('Please login via your BITS Email');
+            router.replace('/Login');
+            return;
+          }
           const userRef = doc(db, "users", user.uid);
           const userDoc = await getDoc(userRef);
 

@@ -26,7 +26,7 @@
     </section>
 
     <!-- VERSUS OR NO EVENT MESSAGE -->
-    <!-- VERSUS OR NO EVENT MESSAGE -->
+
     <section class="live-match-spotlight-section" v-if="hasEventStarted">
       <div v-if="liveMatches.length > 0" class="matches-container">
         <h2 class="ongoing-matches-title">Live Matches</h2>
@@ -91,7 +91,7 @@
             <label for="bitsID">Enter your BITS ID</label>
             <input type="text" id="bitsID" v-model="participationData.bitsID" required
 
-              pattern="^20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-Za-z]\d{4}[A-Za-z]$"
+              pattern="^20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-Za-z0-9]\d{4}[A-Za-z]$"
               title="Format: 20XXA1BB1234C (e.g., 2021A3BC1234D) or 2024B4A7PS0491G" />
 
             <span v-if="userIdError" class="error">{{ userIdError }}</span>
@@ -155,7 +155,7 @@
             <ul>
               <li>Enter the Team ID given to you by your team leader</li>
               <li>Wait for your team leader to accept/decline your request.</li>
-              <li>Once registered, you will be a player in this tournament</li>
+              <li>Once registered, you will be a player in this tournament.</li>
             </ul>
             <h3 class="guidelines-subtitle">For Creating a new Team</h3>
             <ul>
@@ -213,19 +213,69 @@
             <p>Your request to join team <strong>{{ userJoinRequest.teamId }}</strong> is <span
                 class="status">pending</span> approval.</p>
           </template>
-          <template v-else-if="userJoinRequest.status === 'accepted'">
-            <p><strong>Accepted!</strong> You’re now a part of team <strong>{{ userJoinRequest.teamId }}</strong>.</p>
-            <button class="view-team-btn" @click="fetchTeamData(userInfo)">View Team Details</button>
-          </template>
-          <template v-else-if="userJoinRequest.status === 'rejected'">
-            <p><strong>Rejected.</strong> Request to join team <strong>{{ userJoinRequest.teamId }}</strong> was
-              rejected.</p>
-            <div class="retry-form">
-              <label for="newTeamId">Enter New Team ID:</label>
-              <input v-model="newTeamId" id="newTeamId" required>
-              <button class="retry-btn" @click="submitNewRequest">Resubmit</button>
-            </div>
-          </template>
+        </div>
+      </div>
+
+      <!-- ACCEPTED LOGIC: Use new computed property -->
+      <div v-else-if="isRequestAccepted && !hasEventStarted" class="join-request-card">
+        <h2>Your Request Status</h2>
+        <div class="join-request-status accepted">
+          <p><strong>Accepted!</strong> You’re now a part of team <strong>{{ userInfo.teamId }}</strong>.</p>
+          <button class="view-team-btn" @click="fetchTeamData(userInfo)">View Team Details</button>
+        </div>
+      </div>
+
+      <!-- REJECTED LOGIC: Use new computed property -->
+      <div v-else-if="isRequestRejected && !hasEventStarted" class="join-request-card">
+        <h2>Your Request Status</h2>
+        <div class="join-request-status rejected">
+          <p><strong>Rejected.</strong> Request to join team <strong>{{ userInfo.teamId }}</strong> was rejected.</p>
+          <!-- Show different UI based on event status -->
+          <div v-if="hasEventStarted">
+            <p class="event-started-message">The event has already begun and your team join request was rejected. 
+            You cannot join or create a team now.</p>
+          </div>
+          <div v-else class="action-buttons">
+            <button class="retry-btn" @click="createNewTeamMode = false">Try Another Team</button>
+            <button class="create-team-btn" @click="createNewTeamMode = true">Create My Own Team</button>
+          </div>
+          <div v-if="!hasEventStarted && !createNewTeamMode" class="retry-form">
+            <label for="newTeamId">Enter New Team ID:</label>
+            <input v-model="newTeamId" id="newTeamId" required>
+            <button class="retry-btn" @click="submitNewRequest">Submit Request</button>
+          </div>
+          <!-- Create New Team Form -->
+          <div v-if="!hasEventStarted && createNewTeamMode" class="create-team-form">
+            <h3>Create Your Own Team</h3>
+            <p class="rejection-reason">Since your request to join a team was rejected, you can create your own team.</p>
+            <form @submit.prevent="submitCreateTeamAfterRejection">
+              <div class="personal-info">
+                <label for="rejectionTeamName">Team Name:</label>
+                <input v-model="participationData.teamName" type="text" id="rejectionTeamName" required />
+                <label for="rejectionTeamSlogan">Team Slogan:</label>
+                <input v-model="participationData.teamSlogan" type="text" id="rejectionTeamSlogan" required />
+                <label for="rejectionLeaderPhone">Leader Phone Number:</label>
+                <input
+                  v-model="participationData.leaderPhone"
+                  id="rejectionLeaderPhone"
+                  type="text"
+                  required
+                  pattern="^(\+91[\-\s]?)?[0]?(91)?[6-9]\d{9}$"
+                  title="Enter a valid Indian mobile number (with or without +91, spaces, or leading zero)"
+                />
+                <div class="error" v-if="phoneError">{{ phoneError }}</div>
+                <div class="team-id-display">
+                  <strong>Your Team ID:</strong> {{ participationData.teamId }}
+                </div>
+                <span class="team-id-hint">Save this ID to share with your team members.</span>
+              </div>
+              <div class="submit-section">
+                <button type="submit" :disabled="isSubmitting">
+                  {{ isSubmitting ? 'Creating...' : 'Create Team' }}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -308,7 +358,8 @@ import {
   collection,
   query,
   orderBy,
-  limit
+  limit,
+  deleteDoc // <-- Add this import
 } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 import NavigationBar from '@/components/NavigationBar.vue';
@@ -335,6 +386,7 @@ export default {
     const userJoinRequest = ref(null);
     const newTeamId = ref('');
     const teamMembers = ref([]);
+    const createNewTeamMode = ref(false); // Track if user wants to create a new team after rejection
     const membersScroll = ref(null);
     const phoneError = ref("");
     const participationData = ref({
@@ -355,6 +407,36 @@ export default {
         return teamMembers.value[0].id;
       }
       return null;
+    });
+
+    // Computed: request accepted logic
+    const isRequestAccepted = computed(() => {
+      if (!userInfo.value || !userHasParticipated.value) return false;
+      const teamId = userInfo.value.teamId;
+      if (!teamId) return false;
+      // If user IS a member of the team
+      if (teamMembers.value.map(m => m.id).includes(userInfo.value.uid)) {
+        // If user has no join request doc
+        if (!userJoinRequest.value) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    // Computed: request rejected logic (unchanged)
+    const isRequestRejected = computed(() => {
+      if (!userInfo.value || !userHasParticipated.value) return false;
+      const teamId = userInfo.value.teamId;
+      if (!teamId) return false;
+      // If user is NOT a member of the team
+      if (!teamMembers.value.map(m => m.id).includes(userInfo.value.uid)) {
+        // If user has no join request doc
+        if (!userJoinRequest.value) {
+          return true;
+        }
+      }
+      return false;
     });
 
     function scrollMembers(direction) {
@@ -434,21 +516,61 @@ export default {
 
       // Initialize animations
       initializeAnimations();
-      
+
       // Check if user has pending requests and if associated teams are full
       await checkPendingRequestsForFullTeams();
+
+      // NEW: Clean up non-pending teamJoinRequests if event has not started
+      if (!hasEventStarted.value) {
+        const querySnapshot = await getDocs(collection(db, "teamJoinRequests"));
+        for (const reqDoc of querySnapshot.docs) {
+          const data = reqDoc.data();
+          if (data.status !== "pending") {
+            await deleteDoc(doc(db, "teamJoinRequests", reqDoc.id));
+          }
+        }
+      }
+
+      // Auto-decline logic
+      if (userInfo.value && userInfo.value.teamId && userInfo.value.uid) {
+        const teamDoc = await getDoc(doc(db, "teams", userInfo.value.teamId));
+        if (teamDoc.exists()) {
+          const teamData = teamDoc.data();
+          if (
+            teamData.creatorUid === userInfo.value.uid &&
+            teamData.members.length >= teamData.maxMembers
+          ) {
+            // Delete all pending requests for this team
+            const q = query(
+              collection(db, "teamJoinRequests"),
+              where("teamId", "==", userInfo.value.teamId),
+              where("status", "==", "pending")
+            );
+            const querySnapshot = await getDocs(q);
+            for (const reqDoc of querySnapshot.docs) {
+              await deleteDoc(doc(db, "teamJoinRequests", reqDoc.id));
+            }
+          }
+        }
+      }
     });
 
-    // ADD these new functions BEFORE the return statement:
+    async function deleteAllTeamJoinRequests() {
+      const querySnapshot = await getDocs(collection(db, "teamJoinRequests"));
+      for (const reqDoc of querySnapshot.docs) {
+        await deleteDoc(doc(db, "teamJoinRequests", reqDoc.id));
+      }
+    }
+
     function setupEventStatusListener() {
       const eventStatusRef = doc(db, "events", "currentEvent");
-
-      eventStatusListener.value = onSnapshot(eventStatusRef, (docSnap) => {
+      eventStatusListener.value = onSnapshot(eventStatusRef, async (docSnap) => {
         if (docSnap.exists()) {
           const eventStarted = docSnap.data().eventStatus || false;
           hasEventStarted.value = eventStarted;
 
           if (eventStarted) {
+            await deleteAllTeamJoinRequests(); // <-- Now this function is defined
             setupDayListeners();
             fetchFeaturedPlayers();
           } else {
@@ -806,8 +928,8 @@ export default {
         return false;
       }
       
-      // Use creatorUid as the document ID for teamJoinRequests
-      await setDoc(doc(db, "teamJoinRequests", creatorUid), {
+      // Use user.uid as the document ID for teamJoinRequests
+      await setDoc(doc(db, "teamJoinRequests", user.uid), {
         teamId: teamId,
         requesterUid: user.uid,
         requesterName: user.displayName,
@@ -852,7 +974,7 @@ export default {
 
     function validateUserID() {
 
-      const regex = /^20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-Za-z]\d{4}[A-Za-z]$/;
+      const regex = /^20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-Za-z0-9]\d{4}[A-Za-z]$/;
       if (!regex.test(participationData.value.bitsID)) {
         userIdError.value = 'Invalid ID format. Example: 2021A3BC1234G';
         return false;
@@ -893,6 +1015,13 @@ export default {
         participationData.value.teamId = generateTeamId();
       } else {
         participationData.value.teamId = "";
+      }
+    });
+    
+    // Also generate team ID when createNewTeamMode is set to true
+    watch(createNewTeamMode, (newValue) => {
+      if (newValue) {
+        participationData.value.teamId = generateTeamId();
       }
     });
 
@@ -973,19 +1102,22 @@ export default {
 
     async function acceptRequest(request) {
       try {
+        // Restrict accepting if team is full
+        const teamDoc = await getDoc(doc(db, "teams", request.teamId));
+        if (teamDoc.exists()) {
+          const teamData = teamDoc.data();
+          if (teamData.members.length >= teamData.maxMembers) {
+          //eslint-disable-next-line
+            alert("Team is already full. Cannot accept more members.");
+            requestActionLoading.value[request.id] = false;
+            return;
+          }
+        }
         requestActionLoading.value[request.id] = true;
-        await updateDoc(doc(db, "teamJoinRequests", request.id), {
-          status: "accepted"
-        });
-
+        await deleteDoc(doc(db, "teamJoinRequests", request.id));
         await updateDoc(doc(db, "teams", request.teamId), {
           members: arrayUnion(request.requesterUid)
         });
-
-        // await updateDoc(doc(db, "users", request.requesterUid), {
-        //   teamId: request.teamId
-        // })
-
         fetchTeamRequests(request.teamId);
         // Reload the page after accepting
         //eslint-disable-next-line
@@ -999,9 +1131,7 @@ export default {
     async function declineRequest(request) {
       try {
         requestActionLoading.value[request.id] = true;
-        await updateDoc(doc(db, "teamJoinRequests", request.id), {
-          status: "rejected"
-        });
+        await deleteDoc(doc(db, "teamJoinRequests", request.id));
         fetchTeamRequests(request.teamId);
         // Reload the page after declining
         //eslint-disable-next-line
@@ -1038,9 +1168,56 @@ export default {
         // 4. Refresh data
         fetchUserRequests(user.uid);
         newTeamId.value = '';
+        
+        // 5. Reload the page to show updated status
+        setTimeout(() => {
+          //eslint-disable-next-line
+          window.location.reload();
+        }, 1500);
       }
       catch (error) {
         console.error("Error submitting new request:", error);
+      }
+    }
+    
+    // Function to create a team after join request rejection
+    async function submitCreateTeamAfterRejection() {
+      if (isSubmitting.value) return;
+      if (teamOptIn.value && !validatePhone()) return;
+      
+      isSubmitting.value = true;
+      teamJoinError.value = '';
+      
+      try {
+        const user = firebaseApp.auth.currentUser;
+        if (!user) throw new Error('User not authenticated');
+        
+        // Create the new team
+        await createNewTeam(user);
+        
+        // Update user data
+        await updateUserData(user);
+        
+        // Mark user as having participated
+        userHasParticipated.value = true;
+        
+        // Reset the rejection state
+        userJoinRequest.value = null;
+        createNewTeamMode.value = false;
+        
+        // Reload user info
+        userInfo.value = await getUser.fetchUserData(user);
+        
+        // Show success message and reload page
+        setTimeout(() => {
+          //eslint-disable-next-line
+          window.location.reload();
+        }, 1500);
+      } catch (error) {
+        console.error('Error creating team after rejection:', error);
+        teamJoinError.value = error.message || 'Error creating team. Please try again.';
+      } finally {
+        isSubmitting.value = false;
       }
     }
 
@@ -1071,18 +1248,11 @@ export default {
           // Get the team document
           const teamDoc = await getDoc(doc(db, "teams", teamId));
           
-          // If team exists and is full, update request status to rejected
+          // If team exists and is full, delete the request
           if (teamDoc.exists()) {
             const teamData = teamDoc.data();
-            
             if (teamData.members && teamData.members.length >= teamData.maxMembers) {
-              console.log(`Team ${teamId} is full. Rejecting request ${requestDoc.id}`);
-              
-              // Update request status to rejected
-              await updateDoc(doc(db, "teamJoinRequests", requestDoc.id), {
-                status: "rejected",
-                rejectionReason: "Team is full"
-              });
+              await deleteDoc(doc(db, "teamJoinRequests", requestDoc.id));
             }
           }
         }
@@ -1125,6 +1295,8 @@ export default {
       acceptRequest,
       declineRequest,
       submitNewRequest,
+      submitCreateTeamAfterRejection,
+      createNewTeamMode,
       isLive,
       liveMatches,
       teamAName,
@@ -1142,6 +1314,8 @@ export default {
       membersScroll,
       phoneError,
       requestActionLoading,
+      isRequestAccepted,
+      isRequestRejected, // <-- Export new computed property
     };
   }
 };
@@ -1862,7 +2036,7 @@ html, body {
   background: $bg-dark-alt;
   border: 2px solid $cream20;
   border-radius: 20px;
-  max-width: 300px;
+  max-width: 450px;
   //box-shadow: 0 6px 20px $orange;
   text-align: center;
 
@@ -1870,6 +2044,13 @@ html, body {
     color: $orange;
     margin-bottom: 1rem;
     font-family: 'Integral-CF', sans-serif;
+  }
+  
+  h3 {
+    color: $orange;
+    margin-bottom: 1rem;
+    font-family: 'Integral-CF', sans-serif;
+    font-size: 1.5rem;
   }
 
   .join-request-status {
@@ -1899,9 +2080,30 @@ html, body {
       font-weight: bold;
     }
   }
+  
+  .event-started-message {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: rgba(255, 87, 87, 0.2);
+    border: 2px solid $red;
+    border-radius: 10px;
+    color: $red;
+    font-weight: bold;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    box-shadow: 0 0 10px rgba(255, 87, 87, 0.3);
+  }
+  
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
 
   .view-team-btn,
-  .retry-btn {
+  .retry-btn,
+  .create-team-btn {
     background: $orange;
     color: $bg-dark;
     font-family: 'Integral-CF', sans-serif;
@@ -1921,6 +2123,15 @@ html, body {
     color: $cream;
   }
 
+  .create-team-btn {
+    background: $red;
+    color: $cream;
+    
+    &:hover {
+      background: darken($red, 10%);
+    }
+  }
+  
   .retry-form {
     display: flex;
     gap: 0.7em;
@@ -1935,6 +2146,92 @@ html, body {
       padding: 0.3em 0.6em;
       background: $brown30;
       color: $cream;
+    }
+  }
+  
+  .create-team-form {
+    margin-top: 1.5rem;
+    text-align: left;
+    
+    .rejection-reason {
+      color: $cream80;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+    
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .personal-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      
+      input {
+        padding: 0.5rem;
+        border-radius: 4px;
+        border: 1px solid $orange;
+        background: $brown30;
+        color: $cream;
+        font-family: 'Integral-CF', sans-serif;
+      }
+      
+      label {
+        color: $orange;
+        margin-top: 0.5rem;
+        font-family: 'Integral-CF', sans-serif;
+        text-align: left;
+      }
+    }
+    
+    .team-id-display {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      background: $brown30;
+      border-radius: 4px;
+      text-align: center;
+      color: $orange;
+    }
+    
+    .team-id-hint {
+      display: block;
+      font-size: 0.8rem;
+      color: $cream70;
+      margin-top: 0.3rem;
+      text-align: center;
+    }
+    
+    .submit-section {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+      
+      button {
+        padding: 0.7rem 2rem;
+        background: $orange;
+        border: none;
+        border-radius: 8px;
+        color: $bg-dark;
+        font-family: 'Integral-CF', sans-serif;
+        cursor: pointer;
+        transition: background 0.2s;
+        box-shadow: 0 3px 8px rgba(241, 82, 41, 0.6);
+        
+        &:hover:not(:disabled) {
+          background: $red;
+          color: $cream;
+        }
+        
+        &:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+      }
     }
   }
 }
@@ -2001,6 +2298,8 @@ html, body {
         }
 
         .accept-btn:hover {
+         
+         
           background: #2ecc40;
           color: $cream;
         }
