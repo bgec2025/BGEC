@@ -651,7 +651,7 @@ $ref-height: 768;
 }
 
 // Responsive for screens below 1600px (to prevent overflow)
-@media (max-width: 1599px) {
+@media (max-width: 1650px) {
   .text-container {
     min-width: 320px !important;
     max-width: 98vw !important;
