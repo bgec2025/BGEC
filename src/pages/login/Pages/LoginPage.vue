@@ -650,6 +650,56 @@ $ref-height: 768;
   }
 }
 
+// Responsive for screens below 1600px (to prevent overflow)
+@media (max-width: 1599px) {
+  .text-container {
+    min-width: 320px !important;
+    max-width: 98vw !important;
+    padding: 0 0.5rem;
+    margin-bottom: 1rem !important;
+  }
+  .login-content-wrapper {
+    height: auto !important;
+    width: 100vw !important;
+    flex-direction: column !important;
+  }
+  .login-right {
+    height: auto !important;
+    min-height: 0 !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    flex: none !important;
+    margin: 0 auto !important;
+  }
+  .centered-title-group {
+    margin-bottom: 2rem !important;
+  }
+  .wreck-text {
+    font-size: clamp(1.2rem, 7vw, 7rem) !important;
+    margin-bottom: 1rem !important;
+  }
+  .havoc-text {
+    font-size: clamp(1.2rem, 6vw, 6rem) !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .neon-quote {
+    font-size: clamp(0.8rem, 2vw, 1.1rem) !important;
+    margin-bottom: 1rem !important;
+  }
+  .insert-coin-btn {
+    font-size: 1rem !important;
+    height: 40px !important;
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+    max-width: 220px !important;
+    width: 80vw !important;
+  }
+}
+
 @media (max-width: 768px) {
   .login-content-wrapper {
     flex-direction: column;
