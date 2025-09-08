@@ -650,6 +650,35 @@ $ref-height: 768;
   }
 }
 
+// Responsive for screens below 1600px (to prevent overflow)
+@media (max-width: 1599px) {
+  .text-container {
+    min-width: 320px !important;
+    max-width: 98vw !important;
+    padding: 0 0.5rem;
+  }
+  .wreck-text {
+    font-size: clamp(1.2rem, 7vw, 7rem) !important;
+    margin-bottom: 1rem !important;
+  }
+  .havoc-text {
+    font-size: clamp(1.2rem, 6vw, 6rem) !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .neon-quote {
+    font-size: clamp(0.8rem, 2vw, 1.1rem) !important;
+    margin-bottom: 2rem !important;
+  }
+  .insert-coin-btn {
+    font-size: 1rem !important;
+    height: 40px !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+    max-width: 220px !important;
+    width: 80vw !important;
+  }
+}
+
 @media (max-width: 768px) {
   .login-content-wrapper {
     flex-direction: column;
