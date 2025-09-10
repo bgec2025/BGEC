@@ -857,13 +857,22 @@ export default {
         if (!user) throw new Error('User not authenticated');
         if (teamOptIn.value) {
           await createNewTeam(user);
+          await updateUserData(user);
+          userHasParticipated.value = true;
+          userInfo.value = await getUser.fetchUserData(user);
+          setTimeout(() => {
+            window.location.reload();
+          }, 1250);
+          return;
         } else {
           const canJoin = await handleTeamJoin(user);
           if (!canJoin) return;
+          await updateUserData(user);
+          userHasParticipated.value = true;
+          userInfo.value = await getUser.fetchUserData(user);
+          // Reload handled inside handleTeamJoin
+          return;
         }
-        await updateUserData(user);
-        userHasParticipated.value = true;
-        userInfo.value = await getUser.fetchUserData(user);
       } catch (error) {
         console.error('Error submitting participation:', error);
       } finally {
@@ -2270,7 +2279,7 @@ html, body {
         font-size: 1.11rem;
         color: $cream90;
         margin-bottom: .8rem;
-        text-align: center;
+               text-align: center;
 
         .pending-name .pending-mail {
           font-weight: 700;
