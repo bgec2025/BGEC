@@ -92,7 +92,7 @@
             <input type="text" id="bitsID" v-model="participationData.bitsID" required
 
               pattern="^20\d{2}[A-Za-z][A-Za-z0-9][A-Za-z][A-Za-z0-9]\d{4}[A-Za-z]$"
-              title="Format: 20XXA1BB1234C (e.g., 2021A3BC1234D) or 2024B4A7PS0491G" />
+              title="Format: 20XXA1PS1234G" />
 
             <span v-if="userIdError" class="error">{{ userIdError }}</span>
 
