@@ -879,7 +879,7 @@ export default {
         creatorUid: user.uid,
         leaderPhone: participationData.value.leaderPhone,
         members: [user.uid],
-        maxMembers: 4,
+        maxMembers: 5,
         createdAt: new Date(),
         status: 'active'
       };
