@@ -881,6 +881,12 @@ export default {
     }
 
     async function createNewTeam(user) {
+      // Check if team already exists
+      const teamDoc = await getDoc(doc(db, "teams", participationData.value.teamId));
+      if (teamDoc.exists()) {
+        teamJoinError.value = 'A team with this ID already exists. Please try again.';
+        return false;
+      }
       const teamData = {
         teamId: participationData.value.teamId,
         teamName: participationData.value.teamName,
@@ -893,6 +899,7 @@ export default {
         status: 'active'
       };
       await setDoc(doc(db, "teams", participationData.value.teamId), teamData);
+      return true;
     }
 
 
