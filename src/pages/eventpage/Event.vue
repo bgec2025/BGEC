@@ -838,10 +838,12 @@ export default {
     .event-day>h2,
     .event-day .fixture-table .match-row .team,
     .event-day .fixture-table .match-row .vs,
-    .event-day .fixture-table .match-row .time,
-    .event-day .fixture-table .match-row .matchStatus {
-      font-family: 'Integral-CF', serif;
+    .event-day .fixture-table .match-row,
+    .event-day .fixture-table .match-row {
+      font-family: 'Integral-CF', serif !important;
     }
+
+
 
     .schedule-header {
       background: $brown30;
@@ -929,18 +931,17 @@ export default {
 
           .teamA,
           .teamB {
-            font-family: 'Esporte', serif;
-            font-size: 1.3rem;
+            font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 1.5rem;
             font-weight: bold;
             color: $cream90;
-            max-width: 140px;
+            max-width: 250px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
 
             @media (max-width: 600px) {
               font-size: 1rem;
-              max-width: 90px;
             }
           }
 
@@ -965,36 +966,24 @@ export default {
           }
         }
 
-        .match-col.time-status {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          justify-content: center;
-          flex: 1;
-          min-width: 0;
-          gap: 0.2rem;
+        .match-col.time-status .time {
+          font-family: 'Esporte', serif; // Change to your desired font
+          font-size: 1.7rem;
+          color: $orange;
+          margin-bottom: 0.1rem;
+          text-align: left; // Align left
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 170px;
+        }
 
-          @media (max-width: 600px) {
-            align-items: flex-end;
-            gap: 0.1rem;
+        @media (max-width: 600px) {
+          .match-col.time-status .time {
+            font-size: 1.1rem;
+            max-width: 120px;
           }
-
-          .time {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: $orange;
-            margin-bottom: 0.1rem;
-            text-align: right;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 80px;
-
-            @media (max-width: 600px) {
-              font-size: 0.95rem;
-              max-width: 60px;
-            }
-          }
+        }
 
           .matchStatus {
             display: inline-block;
@@ -1009,6 +998,7 @@ export default {
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 220px; // Increased for 15+ letters
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
 
             @media (max-width: 600px) {
               font-size: 0.85rem;
@@ -1021,7 +1011,7 @@ export default {
               background: linear-gradient(90deg, #f15229 70%, #c40817 100%);
               color: #fff;
               border: 2px solid $orange;
-              box-shadow: 0 0 8px $orange;
+              box-shadow: 0 0 2px $orange;
               animation: blinklive 1.1s infinite alternate;
             }
 
@@ -1361,5 +1351,4 @@ export default {
       overflow-x: hidden;
     }
   }
-}
 </style>
