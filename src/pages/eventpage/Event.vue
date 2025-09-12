@@ -610,12 +610,11 @@ export default {
 
 
     async function createStatsDocs() {
+      // Create team stats and ranking for all teams
       const teamSnapShot = await getDocs(collection(db, "teams"));
-
       for (const teamDoc of teamSnapShot.docs) {
         const teamData = teamDoc.data();
         const teamId_stat = teamDoc.id;
-
         const teamStatsRef = doc(db, "teamstats", teamId_stat);
         const teamRankingRef = doc(db, "teamRanking", teamId_stat);
         await setDoc(teamStatsRef, {
@@ -636,42 +635,33 @@ export default {
           normalizedMatchesWon: 0,
           normalizedNumMembers: 0,
           totalPoints: 0,
-          teamName: teamData.teamName
+          teamName: teamData.teamName || teamId_stat
         });
+      }
 
-        for (const memberUid of teamData.members || []) {
-          const playerStatsRef = doc(db, "playerstats", memberUid);
-          const playerRankingRef = doc(db, "playerRanking", memberUid);
-
-          const userRef = doc(db, "users", memberUid);
-          const userDoc = await getDoc(userRef);
-          
-          // Default values in case user data is missing
-          let gameName = "Player";
-          let displayName = "User";
-          
-          // Check if user document exists and has the required fields
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            gameName = userData.gameName || "Player";
-            displayName = userData.displayName || "User";
-          }
-
+      // Create player stats and ranking for all users who have participated
+      const userSnapShot = await getDocs(collection(db, "users"));
+      for (const userDoc of userSnapShot.docs) {
+        const userData = userDoc.data();
+        if (userData.hasParticipated) {
+          const playerStatsRef = doc(db, "playerstats", userDoc.id);
+          const playerRankingRef = doc(db, "playerRanking", userDoc.id);
           await setDoc(playerStatsRef, {
-            teamId: teamId_stat,
+            teamId: userData.teamId || "",
             kills: 0,
             deaths: 0,
             highestTeamWinStreak: 0,
             supportPoints: 0,
           });
-
           await setDoc(playerRankingRef, {
             normalizedDeaths: 0,
             normalizedHighestTeamWinStreak: 0,
             normalizedKills: 0,
             normalizedSupportPoints: 0,
-            teamId: teamId_stat,
-            totalPoints: 0
+            teamId: userData.teamId || "",
+            totalPoints: 0,
+            gameName: userData.gameName || "Player",
+            displayName: userData.displayName || "User"
           });
         }
       }
