@@ -592,18 +592,66 @@ export default {
 
       daysToMonitor.forEach(dayName => {
         const dayRef = doc(db, "events", dayName);
+        console.log(`Setting up listener for ${dayName}`);
 
         const unsubscribe = onSnapshot(dayRef, async (docSnap) => {
           if (docSnap.exists()) {
             const dayData = docSnap.data();
-
-            // Check if this day is live
-            if (dayData.isLive && dayData.matches) {
-              await processDayMatches(dayName, dayData.matches);
+            console.log(`Received update for ${dayName}:`, dayData);
+            
+            // Always check if there are matches with status 'ongoing', regardless of isLive
+            if (dayData.matches) {
+              // Log the raw match data for debugging
+              console.log(`Raw matches data for ${dayName}:`, JSON.stringify(dayData.matches));
+              
+              // Handle the matches data regardless of its type
+              const matchesArray = [];
+              
+              // If it's already an array, use it directly
+              if (Array.isArray(dayData.matches)) {
+                matchesArray.push(...dayData.matches);
+              } 
+              // If it's an object with numeric keys (like Firebase sometimes does)
+              else if (typeof dayData.matches === 'object') {
+                console.log("Matches is an object, not an array. Converting...");
+                // Convert object to array
+                Object.keys(dayData.matches).forEach(key => {
+                  if (!isNaN(Number(key))) {
+                    matchesArray.push(dayData.matches[key]);
+                  }
+                });
+              }
+              
+              console.log("Processed matches array:", matchesArray);
+              
+              // Check each match carefully
+              const ongoingMatches = [];
+              for (let i = 0; i < matchesArray.length; i++) {
+                const match = matchesArray[i];
+                console.log(`Match ${i} in ${dayName}:`, match);
+                
+                // Case-insensitive comparison to handle any status format
+                if (match && (
+                  match.status === 'ongoing' || 
+                  match.status === 'Ongoing' ||
+                  (typeof match.status === 'string' && match.status.toLowerCase() === 'ongoing')
+                )) {
+                  console.log(`Found ongoing match in ${dayName}:`, match);
+                  ongoingMatches.push(match);
+                }
+              }
+              
+              console.log(`${dayName} has ${ongoingMatches.length} ongoing matches`);
+              
+              if (ongoingMatches.length > 0) {
+                // Only process the ongoing matches
+                await processDayMatches(dayName, ongoingMatches);
+              } else {
+                removeDayMatches(dayName);
+              }
             } else {
-              // Remove matches from this day if no longer live
+              console.log(`${dayName} has no valid matches array`);
               removeDayMatches(dayName);
-
             }
           }
         });
@@ -636,54 +684,96 @@ export default {
     }
 
     async function processDayMatches(dayName, matches) {
+      console.log(`Processing ${matches.length} matches for ${dayName}`);
       const validMatches = [];
 
       // Process each match in the day
       for (let index = 0; index < matches.length; index++) {
         const match = matches[index];
+        // Safe check for match properties
+        if (!match) {
+          console.warn(`Match ${index} in ${dayName} is undefined or null`);
+          continue;
+        }
+        
+        console.log(`Match ${index} status:`, match.status);
 
-        // Only process matches with 'ongoing' status
-        if (match.status === 'ongoing') {
+        // Show matches with status 'ongoing' regardless of isLive field
+        const status = match.status || '';
+        if (typeof status === 'string' && status.toLowerCase() === 'ongoing') {
+          console.log(`Processing ongoing match ${index} in ${dayName}`);
           const processedMatch = await processMatch(match, dayName, index);
           if (processedMatch) {
+            console.log(`Match processed successfully:`, processedMatch);
             validMatches.push(processedMatch);
           }
         }
       }
 
+      console.log(`Found ${validMatches.length} valid ongoing matches for ${dayName}`);
+      
       // Update live matches - remove old matches from this day and add new ones
+      const oldMatches = [...liveMatches.value];
       liveMatches.value = liveMatches.value.filter(m => m.dayName !== dayName);
       liveMatches.value.push(...validMatches);
+      
+      console.log('Live Matches before:', oldMatches);
+      console.log('Live Matches after:', liveMatches.value);
     }
 
     async function processMatch(match, dayName, matchIndex) {
       try {
+        console.log("Processing match data:", match);
+        
+        // Direct access to team names with fallbacks
+        const teamAName = match.teamAName || match.team1Name || 'Team Alpha';
+        const teamBName = match.teamBName || match.team2Name || 'Team Bravo';
+        
+        console.log(`Match teams: ${teamAName} vs ${teamBName}`);
+        
         const processedMatch = {
           id: `${dayName}_${matchIndex}`,
           dayName: dayName,
           matchIndex: matchIndex,
           status: match.status,
           teamA: {
-            name: match.teamAName || match.team1?.name || 'Team Alpha',
+            name: teamAName,
             players: [],
-            stats: { matchesWon: 0, accumulatedKills: 0, accumulatedDeaths: 0 }
+            stats: { 
+              matchesWon: 0, 
+              accumulatedKills: match.teamAKills || 0, 
+              accumulatedDeaths: match.teamADeaths || 0 
+            }
           },
           teamB: {
-            name: match.teamBName || match.team2?.name || 'Team Bravo',
+            name: teamBName,
             players: [],
-            stats: { matchesWon: 0, accumulatedKills: 0, accumulatedDeaths: 0 }
+            stats: { 
+              matchesWon: 0, 
+              accumulatedKills: match.teamBKills || 0, 
+              accumulatedDeaths: match.teamBDeaths || 0 
+            }
           }
         };
 
-        // Fetch team stats for both teams
-        if (processedMatch.teamA.name) {
-          await fetchTeamStatsForMatch(processedMatch.teamA.name, processedMatch.teamA);
+        // Try to fetch team stats, but don't wait if it fails
+        try {
+          if (processedMatch.teamA.name) {
+            await fetchTeamStatsForMatch(processedMatch.teamA.name, processedMatch.teamA);
+          }
+        } catch (error) {
+          console.warn(`Could not fetch stats for team ${processedMatch.teamA.name}:`, error);
         }
 
-        if (processedMatch.teamB.name) {
-          await fetchTeamStatsForMatch(processedMatch.teamB.name, processedMatch.teamB);
+        try {
+          if (processedMatch.teamB.name) {
+            await fetchTeamStatsForMatch(processedMatch.teamB.name, processedMatch.teamB);
+          }
+        } catch (error) {
+          console.warn(`Could not fetch stats for team ${processedMatch.teamB.name}:`, error);
         }
 
+        console.log("Processed match:", processedMatch);
         return processedMatch;
 
       } catch (error) {
@@ -2277,7 +2367,7 @@ html, body {
       border-radius: 10px;
       padding: 1rem 0.8rem;
       margin-bottom: 1.2rem;
-      box-shadow: 0 1px 5px $brown30;
+      box-shadow: 0 1px  5px $brown30;
       display: flex;
       flex-direction: column;
       align-items: center;
