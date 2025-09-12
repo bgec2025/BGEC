@@ -714,7 +714,7 @@ h1 {
 
 .toggle-buttons button {
   font-family: 'Integral-CF', sans-serif;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   padding: 0.8rem 2.5rem;
   border-radius: 30px;
   background: $bg-dark-alt;
@@ -1095,7 +1095,7 @@ tr:hover {
 .player-name {
   font-family: 'Integral-CF', sans-serif;
   color: $cream;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   margin-bottom: 0.3rem;
   white-space: nowrap;
   overflow: hidden;
