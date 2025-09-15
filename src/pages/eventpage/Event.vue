@@ -311,8 +311,8 @@ export default {
             totalPoints: 0.3 * rankingdoc.normalizedMatchesWon +
               0.15 * rankingdoc.normalizedCurrentWinStreak +
               0.15 * rankingdoc.normalizedMaxWinStreak +
-              0.15 * rankingdoc.normalizedKills +
-              0.1 * rankingdoc.normalizedDeaths +
+              0.15 * rankingdoc.normalizedKills -
+              0.1 * rankingdoc.normalizedDeaths + // Changed from + to - to make deaths decrease the score
               0.1 * rankingdoc.normalizedMatchesLost +
               0.05 * rankingdoc.normalizedNumMembers
           });
@@ -368,8 +368,8 @@ export default {
             await updateDoc(refRanking, {
               totalPoints: 0.4 * rankingDoc.normalizedKills +
                 0.25 * rankingDoc.normalizedSupportPoints +
-                0.2 * rankingDoc.normalizedHighestTeamWinStreak +
-                0.15 * rankingDoc.normalizedDeaths
+                0.2 * rankingDoc.normalizedHighestTeamWinStreak -
+                0.15 * rankingDoc.normalizedDeaths // Changed from + to - to make deaths decrease the score
             });
             console.log("Player ranking updated successfully");
           } catch (rankingError) {
