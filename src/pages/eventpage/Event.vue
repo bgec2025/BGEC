@@ -308,9 +308,10 @@ export default {
 
           const rankingdoc = (await getDoc(refRanking)).data();
           await updateDoc(refRanking, {
-            totalPoints: 0.3 * rankingdoc.normalizedMatchesWon +
-              0.15 * rankingdoc.normalizedCurrentWinStreak +
-              0.15 * rankingdoc.normalizedMaxWinStreak +
+            totalPoints:
+              // 0.3 * rankingdoc.normalizedMatchesWon +           // REMOVE
+              // 0.15 * rankingdoc.normalizedCurrentWinStreak +     // REMOVE
+              // 0.15 * rankingdoc.normalizedMaxWinStreak +         // REMOVE
               0.15 * rankingdoc.normalizedKills -
               0.1 * rankingdoc.normalizedDeaths - // deaths: negative effect
               0.1 * rankingdoc.normalizedMatchesLost + // matches lost: negative effect
@@ -366,10 +367,11 @@ export default {
             // Get updated ranking doc for calculating total points
             const rankingDoc = (await getDoc(refRanking)).data();
             await updateDoc(refRanking, {
-              totalPoints: 0.4 * rankingDoc.normalizedKills +
+              totalPoints:
+                0.4 * rankingDoc.normalizedKills +
                 0.25 * rankingDoc.normalizedSupportPoints +
-                0.2 * rankingDoc.normalizedHighestTeamWinStreak -
-                0.15 * rankingDoc.normalizedDeaths // Changed from + to - to make deaths decrease the score
+                // 0.2 * rankingDoc.normalizedHighestTeamWinStreak +  // REMOVE
+                -0.15 * rankingDoc.normalizedDeaths // Changed from + to - to make deaths decrease the score
             });
             console.log("Player ranking updated successfully");
           } catch (rankingError) {
@@ -427,9 +429,10 @@ export default {
           // Get updated normalized stats for totalPoints calculation
           const rankingdoc = (await getDoc(refRanking)).data();
           await updateDoc(refRanking, {
-            totalPoints: 0.3 * rankingdoc.normalizedMatchesWon +
-              0.15 * rankingdoc.normalizedCurrentWinStreak +
-              0.15 * rankingdoc.normalizedMaxWinStreak +
+            totalPoints:
+              // 0.3 * rankingdoc.normalizedMatchesWon +           // REMOVE
+              // 0.15 * rankingdoc.normalizedCurrentWinStreak +     // REMOVE
+              // 0.15 * rankingdoc.normalizedMaxWinStreak +         // REMOVE
               0.15 * rankingdoc.normalizedKills -
               0.1 * rankingdoc.normalizedDeaths -
               0.1 * rankingdoc.normalizedMatchesLost +
@@ -469,10 +472,11 @@ export default {
 
           const rankingDoc = (await getDoc(refRanking)).data();
           await updateDoc(refRanking, {
-            totalPoints: 0.4 * rankingDoc.normalizedKills +
+            totalPoints:
+              0.4 * rankingDoc.normalizedKills +
               0.25 * rankingDoc.normalizedSupportPoints +
-              0.2 * rankingDoc.normalizedHighestTeamWinStreak -
-              0.15 * rankingDoc.normalizedDeaths
+              // 0.2 * rankingDoc.normalizedHighestTeamWinStreak +  // REMOVE
+              -0.15 * rankingDoc.normalizedDeaths
           });
         }
         // --- END NEW ---
