@@ -380,6 +380,107 @@ export default {
           statUpdateMessage.value = 'Player stats and ranking updated!';
         }
 
+        // --- NEW: Re-normalize and update all teams and players after minMaxDoc update ---
+        // Update all team rankings
+        const allTeamStatsSnap = await getDocs(collection(db, "teamstats"));
+        for (const teamDoc of allTeamStatsSnap.docs) {
+          const teamId = teamDoc.id;
+          const stat = teamDoc.data();
+          const membersCount = stat.members?.length || 0;
+          const refRanking = doc(db, "teamRanking", teamId);
+
+          // Update normalized stats
+          await updateDoc(refRanking, {
+            normalizedDeaths: safeNormalize(
+              stat.accumulatedDeaths,
+              minMaxDocData.Team.accumulatedDeaths.min,
+              minMaxDocData.Team.accumulatedDeaths.max
+            ),
+            normalizedKills: safeNormalize(
+              stat.accumulatedKills,
+              minMaxDocData.Team.accumulatedKills.min,
+              minMaxDocData.Team.accumulatedKills.max
+            ),
+            normalizedCurrentWinStreak: safeNormalize(
+              stat.currentWinStreak,
+              minMaxDocData.Team.currentWinStreak.min,
+              minMaxDocData.Team.currentWinStreak.max
+            ),
+            normalizedMaxWinStreak: safeNormalize(
+              stat.highestWinStreak,
+              minMaxDocData.Team.highestWinStreak.min,
+              minMaxDocData.Team.highestWinStreak.max
+            ),
+            normalizedMatchesLost: safeNormalize(
+              stat.matchesLost,
+              minMaxDocData.Team.matchesLost.min,
+              minMaxDocData.Team.matchesLost.max
+            ),
+            normalizedMatchesWon: safeNormalize(
+              stat.matchesWon,
+              minMaxDocData.Team.matchesWon.min,
+              minMaxDocData.Team.matchesWon.max
+            ),
+            normalizedNumMembers: (membersCount - 1) / 3
+          });
+
+          // Get updated normalized stats for totalPoints calculation
+          const rankingdoc = (await getDoc(refRanking)).data();
+          await updateDoc(refRanking, {
+            totalPoints: 0.3 * rankingdoc.normalizedMatchesWon +
+              0.15 * rankingdoc.normalizedCurrentWinStreak +
+              0.15 * rankingdoc.normalizedMaxWinStreak +
+              0.15 * rankingdoc.normalizedKills -
+              0.1 * rankingdoc.normalizedDeaths -
+              0.1 * rankingdoc.normalizedMatchesLost +
+              0.05 * rankingdoc.normalizedNumMembers
+          });
+        }
+
+        // Update all player rankings
+        const allPlayerStatsSnap = await getDocs(collection(db, "playerstats"));
+        for (const playerDoc of allPlayerStatsSnap.docs) {
+          const playerId = playerDoc.id;
+          const stat = playerDoc.data();
+          const refRanking = doc(db, "playerRanking", playerId);
+
+          await updateDoc(refRanking, {
+            normalizedKills: safeNormalize(
+              stat.kills,
+              minMaxDocData.Player.kills.min,
+              minMaxDocData.Player.kills.max
+            ),
+            normalizedHighestTeamWinStreak: safeNormalize(
+              stat.highestTeamWinStreak,
+              minMaxDocData.Player.highestTeamWinStreak.min,
+              minMaxDocData.Player.highestTeamWinStreak.max
+            ),
+            normalizedDeaths: safeNormalize(
+              stat.deaths,
+              minMaxDocData.Player.deaths.min,
+              minMaxDocData.Player.deaths.max
+            ),
+            normalizedSupportPoints: safeNormalize(
+              stat.supportPoints,
+              minMaxDocData.Player.supportPoints.min,
+              minMaxDocData.Player.supportPoints.max
+            )
+          });
+
+          const rankingDoc = (await getDoc(refRanking)).data();
+          await updateDoc(refRanking, {
+            totalPoints: 0.4 * rankingDoc.normalizedKills +
+              0.25 * rankingDoc.normalizedSupportPoints +
+              0.2 * rankingDoc.normalizedHighestTeamWinStreak -
+              0.15 * rankingDoc.normalizedDeaths
+          });
+        }
+        // --- END NEW ---
+
+        statUpdateMessage.value = statTypeTeam.value
+          ? 'Team stats and all rankings updated!'
+          : 'Player stats and all rankings updated!';
+
         updateWinStreak(teamStatForm.value.teamId, teamStatForm.value.highestWinStreak);
       } catch (err) {
         statUpdateMessage.value = 'Error: ' + (err.message || err);
