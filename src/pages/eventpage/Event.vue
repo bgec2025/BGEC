@@ -99,7 +99,7 @@
             <label>Highest Team Win Streak:
               <input type="number" v-model.number="playerStatForm.highestTeamWinStreak" required />
             </label>
-            <label>Support Points:
+            <label>Avg Combat Score:
               <input type="number" v-model.number="playerStatForm.supportPoints" required />
             </label>
           </div>
@@ -312,8 +312,8 @@ export default {
               0.15 * rankingdoc.normalizedCurrentWinStreak +
               0.15 * rankingdoc.normalizedMaxWinStreak +
               0.15 * rankingdoc.normalizedKills -
-              0.1 * rankingdoc.normalizedDeaths + // Changed from + to - to make deaths decrease the score
-              0.1 * rankingdoc.normalizedMatchesLost +
+              0.1 * rankingdoc.normalizedDeaths - // deaths: negative effect
+              0.1 * rankingdoc.normalizedMatchesLost + // matches lost: negative effect
               0.05 * rankingdoc.normalizedNumMembers
           });
 
