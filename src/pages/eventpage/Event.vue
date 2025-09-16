@@ -283,38 +283,25 @@ export default {
               minMaxDocData.Team.accumulatedKills.min,
               minMaxDocData.Team.accumulatedKills.max
             ),
-            normalizedCurrentWinStreak: safeNormalize(
-              teamStatForm.value.currentWinStreak,
-              minMaxDocData.Team.currentWinStreak.min,
-              minMaxDocData.Team.currentWinStreak.max
-            ),
-            normalizedMaxWinStreak: safeNormalize(
-              teamStatForm.value.highestWinStreak,
-              minMaxDocData.Team.highestWinStreak.min,
-              minMaxDocData.Team.highestWinStreak.max
-            ),
-            normalizedMatchesLost: safeNormalize(
-              teamStatForm.value.matchesLost,
-              minMaxDocData.Team.matchesLost.min,
-              minMaxDocData.Team.matchesLost.max
-            ),
-            normalizedMatchesWon: safeNormalize(
-              teamStatForm.value.matchesWon,
-              minMaxDocData.Team.matchesWon.min,
-              minMaxDocData.Team.matchesWon.max
-            ),
+            // Remove win streaks normalization
+            // normalizedCurrentWinStreak: ...
+            // normalizedMaxWinStreak: ...
+            // Instead, normalize matchesWon and matchesLost by their sum
+            normalizedMatchesLost: (teamStatForm.value.matchesWon + teamStatForm.value.matchesLost) > 0
+              ? teamStatForm.value.matchesLost / (teamStatForm.value.matchesWon + teamStatForm.value.matchesLost)
+              : 0,
+            normalizedMatchesWon: (teamStatForm.value.matchesWon + teamStatForm.value.matchesLost) > 0
+              ? teamStatForm.value.matchesWon / (teamStatForm.value.matchesWon + teamStatForm.value.matchesLost)
+              : 0,
             normalizedNumMembers: (getMembers - 1) / 3
           });
 
           const rankingdoc = (await getDoc(refRanking)).data();
           await updateDoc(refRanking, {
-            totalPoints:
-              // 0.3 * rankingdoc.normalizedMatchesWon +           // REMOVE
-              // 0.15 * rankingdoc.normalizedCurrentWinStreak +     // REMOVE
-              // 0.15 * rankingdoc.normalizedMaxWinStreak +         // REMOVE
+            totalPoints: 0.6 * rankingdoc.normalizedMatchesWon +
               0.15 * rankingdoc.normalizedKills -
-              0.1 * rankingdoc.normalizedDeaths - // deaths: negative effect
-              0.1 * rankingdoc.normalizedMatchesLost + // matches lost: negative effect
+              0.1 * rankingdoc.normalizedDeaths -
+              0.1 * rankingdoc.normalizedMatchesLost +
               0.05 * rankingdoc.normalizedNumMembers
           });
 
@@ -347,11 +334,8 @@ export default {
                 minMaxDocData.Player.kills.min,
                 minMaxDocData.Player.kills.max
               ),
-              normalizedHighestTeamWinStreak: safeNormalize(
-                playerStatForm.value.highestTeamWinStreak,
-                minMaxDocData.Player.highestTeamWinStreak.min,
-                minMaxDocData.Player.highestTeamWinStreak.max
-              ),
+              // Remove win streak normalization
+              // normalizedHighestTeamWinStreak: ...
               normalizedDeaths: safeNormalize(
                 playerStatForm.value.deaths,
                 minMaxDocData.Player.deaths.min,
@@ -367,11 +351,9 @@ export default {
             // Get updated ranking doc for calculating total points
             const rankingDoc = (await getDoc(refRanking)).data();
             await updateDoc(refRanking, {
-              totalPoints:
-                0.4 * rankingDoc.normalizedKills +
-                0.25 * rankingDoc.normalizedSupportPoints +
-                // 0.2 * rankingDoc.normalizedHighestTeamWinStreak +  // REMOVE
-                -0.15 * rankingDoc.normalizedDeaths // Changed from + to - to make deaths decrease the score
+              totalPoints: 0.6 * rankingDoc.normalizedKills +
+                0.25 * rankingDoc.normalizedSupportPoints -
+                0.15 * rankingDoc.normalizedDeaths
             });
             console.log("Player ranking updated successfully");
           } catch (rankingError) {
@@ -389,9 +371,9 @@ export default {
           const teamId = teamDoc.id;
           const stat = teamDoc.data();
           const membersCount = stat.members?.length || 0;
+          const totalMatches = (stat.matchesWon || 0) + (stat.matchesLost || 0);
           const refRanking = doc(db, "teamRanking", teamId);
 
-          // Update normalized stats
           await updateDoc(refRanking, {
             normalizedDeaths: safeNormalize(
               stat.accumulatedDeaths,
@@ -403,36 +385,15 @@ export default {
               minMaxDocData.Team.accumulatedKills.min,
               minMaxDocData.Team.accumulatedKills.max
             ),
-            normalizedCurrentWinStreak: safeNormalize(
-              stat.currentWinStreak,
-              minMaxDocData.Team.currentWinStreak.min,
-              minMaxDocData.Team.currentWinStreak.max
-            ),
-            normalizedMaxWinStreak: safeNormalize(
-              stat.highestWinStreak,
-              minMaxDocData.Team.highestWinStreak.min,
-              minMaxDocData.Team.highestWinStreak.max
-            ),
-            normalizedMatchesLost: safeNormalize(
-              stat.matchesLost,
-              minMaxDocData.Team.matchesLost.min,
-              minMaxDocData.Team.matchesLost.max
-            ),
-            normalizedMatchesWon: safeNormalize(
-              stat.matchesWon,
-              minMaxDocData.Team.matchesWon.min,
-              minMaxDocData.Team.matchesWon.max
-            ),
+            // Remove win streaks normalization
+            normalizedMatchesLost: totalMatches > 0 ? stat.matchesLost / totalMatches : 0,
+            normalizedMatchesWon: totalMatches > 0 ? stat.matchesWon / totalMatches : 0,
             normalizedNumMembers: (membersCount - 1) / 3
           });
 
-          // Get updated normalized stats for totalPoints calculation
           const rankingdoc = (await getDoc(refRanking)).data();
           await updateDoc(refRanking, {
-            totalPoints:
-              // 0.3 * rankingdoc.normalizedMatchesWon +           // REMOVE
-              // 0.15 * rankingdoc.normalizedCurrentWinStreak +     // REMOVE
-              // 0.15 * rankingdoc.normalizedMaxWinStreak +         // REMOVE
+            totalPoints: 0.6 * rankingdoc.normalizedMatchesWon +
               0.15 * rankingdoc.normalizedKills -
               0.1 * rankingdoc.normalizedDeaths -
               0.1 * rankingdoc.normalizedMatchesLost +
@@ -453,11 +414,7 @@ export default {
               minMaxDocData.Player.kills.min,
               minMaxDocData.Player.kills.max
             ),
-            normalizedHighestTeamWinStreak: safeNormalize(
-              stat.highestTeamWinStreak,
-              minMaxDocData.Player.highestTeamWinStreak.min,
-              minMaxDocData.Player.highestTeamWinStreak.max
-            ),
+            // Remove win streak normalization
             normalizedDeaths: safeNormalize(
               stat.deaths,
               minMaxDocData.Player.deaths.min,
@@ -472,11 +429,9 @@ export default {
 
           const rankingDoc = (await getDoc(refRanking)).data();
           await updateDoc(refRanking, {
-            totalPoints:
-              0.4 * rankingDoc.normalizedKills +
-              0.25 * rankingDoc.normalizedSupportPoints +
-              // 0.2 * rankingDoc.normalizedHighestTeamWinStreak +  // REMOVE
-              -0.15 * rankingDoc.normalizedDeaths
+            totalPoints: 0.6 * rankingDoc.normalizedKills +
+              0.25 * rankingDoc.normalizedSupportPoints -
+              0.15 * rankingDoc.normalizedDeaths
           });
         }
         // --- END NEW ---
